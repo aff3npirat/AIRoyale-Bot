@@ -4,6 +4,11 @@ import numpy as np
 
 
 class OnnxDetector:
+    """
+    Base class for all detectors.
+
+    Uses onnxruntime to perform inference.
+    """
 
     def __init__(self, model_path):
         self.sess = onnxruntime.InferenceSession(model_path)

@@ -1,0 +1,5 @@
+OTHER = -1
+HOME = 0
+PLAYING = 1
+VICTORY = 2
+LOSS = 3
