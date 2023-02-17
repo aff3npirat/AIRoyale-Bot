@@ -9,13 +9,19 @@ class Bot:
         self.game_state = OTHER
 
     def detect_game_state(self):
-        pass
+        raise NotImplementedError
 
     def choose_action(self):
-        pass
+        raise NotImplementedError
 
     def play_action(self, action):
-        pass
+        raise NotImplementedError
+
+    def set_state(self):
+        """
+        Extracts state from game.
+        """
+        raise NotImplementedError
 
     def run(self):
         while self.detect_game_state() == PLAYING:
