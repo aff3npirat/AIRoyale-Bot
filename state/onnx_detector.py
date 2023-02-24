@@ -16,7 +16,8 @@ class OnnxDetector:
         self.input_name = self.sess.get_inputs()[0].name
         self.output_name = self.sess.get_outputs()[0].name
 
-    def _nms(self, boxes, scores, iou_thres):
+    @staticmethod
+    def iou_nms(boxes, scores, iou_thres):
         x1, y1, x2, y2 = boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3]
 
         areas = (x2 - x1 + 1) * (y2 - y1 + 1)
@@ -41,13 +42,15 @@ class OnnxDetector:
 
         return keep
 
-    def _xywh_to_xyxy(self, boxes):
+    @staticmethod
+    def _xywh_to_xyxy(boxes):
         boxes[:, 0] -= boxes[:, 2] / 2
         boxes[:, 1] -= boxes[:, 3] / 2
         boxes[:, 2] += boxes[:, 0]
         boxes[:, 3] += boxes[:, 1]
 
-    def nms(self, prediction, conf_thres=0.725, iou_thres=0.5):
+    @staticmethod
+    def nms(prediction, conf_thres=0.725, iou_thres=0.5):
         output = [np.zeros((0, 6))] * len(prediction)
         for i in range(len(prediction)):
             # Mask out predictions below the confidence threshold
@@ -69,10 +72,10 @@ class OnnxDetector:
 
             # Convert the xywh of each box to xyxy inplace
             boxes = x[mask, :4]
-            self._xywh_to_xyxy(boxes)
+            OnnxDetector._xywh_to_xyxy(boxes)
 
             # Work out which boxes to keep
-            keep = self._nms(boxes, np.ravel(best_scores), iou_thres)
+            keep = OnnxDetector.iou_nms(boxes, np.ravel(best_scores), iou_thres)
 
             # Keep only the best class
             best = np.hstack([boxes[keep], best_scores[keep], best_scores_idx[keep]])
