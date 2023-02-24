@@ -12,7 +12,7 @@ class UnitDetector(OnnxDetector):
         super().__init__(model_path)
 
     @staticmethod
-    def _preprocess(img):
+    def preprocess(img):
         img = img.resize((UNIT_H, UNIT_W), Image.BICUBIC)
         img = np.array(img, dtype=np.float32)
         img = img.transpose(2, 0, 1)
@@ -43,7 +43,7 @@ class SideDetector(OnnxDetector):
         super().__init__(model_path)
 
     @staticmethod
-    def _preprocess(img):
+    def preprocess(img):
         img = img.resize((SIDE_H, SIDE_W), Image.BICUBIC)
         img = np.array(img, dtype=np.float32)
         img = np.expand_dims(img, axis=0)
