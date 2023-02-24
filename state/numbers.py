@@ -69,6 +69,14 @@ class NumberDetector(OnnxDetector):
         if clean_pred["right_ally_princess_hp"]["number"] == -1:
             clean_pred["right_ally_princess_hp"]["number"] = PRINCESS_HP[clean_pred["ally_king_level"]["number"]-1]
 
+        for side in ["ally", "enemy"]:
+            max_king_hp = KING_HP[clean_pred[f"{side}_king_level"]]
+            max_princess_hp = PRINCESS_HP[clean_pred[f"{side}_king_level"]]
+
+            clean_pred[f"{side}_king_hp"] /= max_king_hp
+            for pos in ["left", "right"]:
+                clean_pred[f"{pos}_{side}_princess_hp"] /= max_princess_hp
+
         return clean_pred
     
     @staticmethod
@@ -91,11 +99,8 @@ class NumberDetector(OnnxDetector):
         padded_image = np.expand_dims(padded_image.transpose(2, 0, 1), axis=0)
         return padded_image
     
-    def run(self, image, king_level=False, conf_thres=0.35, iou_thres=0.45):
-        if king_level:
-            bboxes = TOWER_HP_BOXES + KING_LEVEL_BOXES
-        else:
-            bboxes = TOWER_HP_BOXES
+    def run(self, image, conf_thres=0.35, iou_thres=0.45):
+        bboxes = KING_LEVEL_BOXES + TOWER_HP_BOXES
 
          # Preprocessing
         crops = np.empty((len(bboxes), 3, NUMBER_WIDTH, NUMBER_WIDTH), dtype=np.float32)
