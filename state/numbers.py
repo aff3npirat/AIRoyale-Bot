@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from constants import ELIXIR_BOUNDING_BOX, NUMBER_WIDTH, NUMBER_HEIGHT, TOWER_HP_BOXES, KING_LEVEL_BOXES, KING_LEVEL_2_X, KING_HP, NUMBER_MIN_CONFIDENCE
+from constants import ELIXIR_BOUNDING_BOX, NUMBER_WIDTH, NUMBER_HEIGHT, TOWER_HP_BOXES, KING_LEVEL_BOXES, KING_LEVEL_2_X, KING_HP, NUMBER_MIN_CONFIDENCE, PRINCESS_HP
 from state.onnx_detector import OnnxDetector
 
 
@@ -64,6 +64,11 @@ class NumberDetector(OnnxDetector):
                 clean_pred = self._clean_king_levels(clean_pred)
         clean_pred = self._clean_king_hp(clean_pred)
 
+        if clean_pred["left_ally_princess_hp"]["number"] == -1:
+            clean_pred["left_ally_princess_hp"]["number"] = PRINCESS_HP[clean_pred["ally_king_level"]["number"]-1]
+        if clean_pred["right_ally_princess_hp"]["number"] == -1:
+            clean_pred["right_ally_princess_hp"]["number"] = PRINCESS_HP[clean_pred["ally_king_level"]["number"]-1]
+
         return clean_pred
     
     @staticmethod
@@ -94,7 +99,7 @@ class NumberDetector(OnnxDetector):
 
          # Preprocessing
         crops = np.empty((len(bboxes), 3, NUMBER_WIDTH, NUMBER_WIDTH), dtype=np.float32)
-        for i, (name, bounding_box) in enumerate(bboxes):
+        for i, (_, bounding_box) in enumerate(bboxes):
             crop = image.crop(bounding_box)
             crops[i] = self.preprocess(crop)
 
