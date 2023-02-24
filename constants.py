@@ -1,4 +1,6 @@
-# TODO add screen measures etc...
+# screenshot dimensions
+SCREENSHOT_WIDTH = 368
+SCREENSHOT_HEIGHT = 652
 
 # size of image for side-detector
 SIDE_W = 16
@@ -7,3 +9,39 @@ SIDE_H = 16
 # size of image for unit detector
 UNIT_W = 416
 UNIT_H = 416
+
+# Bounding box of elixir, turret helth bars, king level
+_W = 28
+_H = 7
+KING_HP_X = 188
+LEFT_PRINCESS_HP_X = 74
+RIGHT_PRINCESS_HP_X = 266
+ALLY_PRINCESS_HP_Y = 401
+ENEMY_PRINCESS_HP_Y = 93
+ENEMY_KING_LEVEL_Y = 19
+KING_LEVEL_X = 134
+KING_LEVEL_2_X = KING_LEVEL_X + _W
+ELIXIR_BOUNDING_BOX = (100, 628, 350, 643)
+TOWER_HP_BOXES = [
+    ['enemy_king_hp', (KING_HP_X, 15, 188 + _W, 15 + _H)],
+    ['ally_king_hp', (KING_HP_X, 495, 188 + _W, 495 + _H)],
+    ['right_ally_princess_hp',
+     (RIGHT_PRINCESS_HP_X, ALLY_PRINCESS_HP_Y, RIGHT_PRINCESS_HP_X + _W, ALLY_PRINCESS_HP_Y + _H)],
+    ['left_ally_princess_hp',
+     (LEFT_PRINCESS_HP_X, ALLY_PRINCESS_HP_Y, LEFT_PRINCESS_HP_X + _W, ALLY_PRINCESS_HP_Y + _H)],
+    ['right_enemy_princess_hp',
+     (RIGHT_PRINCESS_HP_X, ENEMY_PRINCESS_HP_Y, RIGHT_PRINCESS_HP_X + _W, ENEMY_PRINCESS_HP_Y + _H)],
+    ['left_enemy_princess_hp',
+     (LEFT_PRINCESS_HP_X, ENEMY_PRINCESS_HP_Y, LEFT_PRINCESS_HP_X + _W, ENEMY_PRINCESS_HP_Y + _H)],
+]
+KING_LEVEL_BOXES = [
+    ['enemy_king_level', (KING_LEVEL_X, ENEMY_KING_LEVEL_Y, KING_LEVEL_X + _W, ENEMY_KING_LEVEL_Y + _H)],
+    ['enemy_king_level_2', (KING_LEVEL_2_X, ENEMY_KING_LEVEL_Y, KING_LEVEL_2_X + _W, ENEMY_KING_LEVEL_Y + _H)],
+]
+NUMBER_HEIGHT = 16
+NUMBER_WIDTH = 64
+NUMBER_MIN_CONFIDENCE = 0.5
+
+# HP
+KING_HP = [2400, 2568, 2736, 2904, 3096, 3312, 3528, 3768, 4008, 4392, 4824, 5304, 5832, 6408]
+PRINCESS_HP = [1400, 1512, 1624, 1750, 1890, 2030, 2184, 2352, 2534, 2786, 3052, 3346, 3668, 4032]
