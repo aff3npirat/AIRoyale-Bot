@@ -1,8 +1,8 @@
 import os
 
 import scipy.optimize
-from PIL import Image
 import numpy as np
+from PIL import Image
 
 from constants import CARD_CONFIG, DATA_DIR, MULTI_HASH_SCALE, MULTI_HASH_INTERCEPT, DECK_SIZE, HAND_SIZE
 
