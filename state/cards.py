@@ -56,7 +56,7 @@ class BlueCardDetector:
                     card = Image.open(path)
                     multi_hash = self._calculate_multi_hash(card)
                     card_hashes[i] = np.tile(np.expand_dims(multi_hash, axis=2), (1, 1, HAND_SIZE))
-                    cards.append({'name': name, 'cost': int(cost), 'type': type_, 'target': target})
+                    cards.append({'name': name, 'cost': int(cost), 'type': type_, 'target': target, "deck_id": i})
                     i += 1
 
         # Add the blank card
@@ -64,7 +64,7 @@ class BlueCardDetector:
         card = Image.open(path)
         multi_hash = self._calculate_multi_hash(card)
         card_hashes[-1] = np.tile(np.expand_dims(multi_hash, axis=2), (1, 1, HAND_SIZE))
-        cards.append({'name': 'blank', 'cost': 11, 'type': 'n/a', 'target': 'n/a'})
+        cards.append({'name': 'blank', 'cost': -1, 'type': 'n/a', 'target': 'n/a', "deck_id": -1})
 
         return cards, card_hashes
 

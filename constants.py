@@ -4,6 +4,12 @@ DATA_DIR = "./data/"
 SCREENSHOT_WIDTH = 368
 SCREENSHOT_HEIGHT = 652
 
+# tile data
+TILE_HEIGHT = 27.6
+TILE_WIDTH = 34
+TILE_INIT_X = 52
+TILE_INIT_Y = 56
+
 # size of image for side-detector
 SIDE_W = 16
 SIDE_H = 16
@@ -70,3 +76,27 @@ CARD_CONFIG = [
 # Multihash coefficients
 MULTI_HASH_SCALE = 0.355
 MULTI_HASH_INTERCEPT = 163
+
+# card names
+CARD_NAMES = [
+    'archer',
+    'arrows', 
+    'cagegoblin', 
+    'fireball', 
+    'giant', 
+    'goblin', 
+    'goblincage',
+    'goblinhut',
+    'hunter', 
+    'knight', 
+    'minion', 
+    'minipekka', 
+    'musketeer', 
+    'prince', 
+    'speargoblin', 
+    'valkyrie', 
+    'wallbreaker', 
+    'babydragon', 
+    'tombstone', 
+    'skeleton'
+]
