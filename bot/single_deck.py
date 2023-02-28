@@ -56,14 +56,14 @@ class SingleDeckBot():
     def _get_board_state(self, units):
         labels, tile_x, tile_y, team = units
 
-        board = np.zeros((TILES_Y, TILES_X, 16), dtype=np.float32)
+        board = np.zeros((16, TILES_Y, TILES_X), dtype=np.float32)
         for i, label in enumerate(labels):
             if label not in self.label_to_deck_id:
                 continue
 
             label = self.label_to_deck_id[label]
             channel_idx = team[i]*8 + label
-            board[tile_y[i], tile_x[i], channel_idx] = 1.0
+            board[channel_idx, tile_y[i], tile_x[i]] = 1.0
 
         return board
 
