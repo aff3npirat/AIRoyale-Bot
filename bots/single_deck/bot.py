@@ -1,9 +1,11 @@
+import torch
 import numpy as np
 
 from state.units import UnitDetector
 from state.cards import BlueCardDetector
 from state.numbers import NumberDetector
 from bots.single_deck.board import BoardEmbedding
+from bots.single_deck.q_net import QNet
 from constants import CARD_NAMES, PRINCESS_HP, TILES_X, TILES_Y
 
 
@@ -18,6 +20,7 @@ class SingleDeckBot():
         self.number_detector = NumberDetector(number_model_path)
         self.card_detector = BlueCardDetector(card_names=deck_names)
         self.board_emb = BoardEmbedding()
+        self.Q_net = QNet()
 
         self.board_embedding_size = board_embedding_size
 
@@ -25,7 +28,7 @@ class SingleDeckBot():
         self.princess_damaged = {"right": False, "left": False}
 
     def _get_context(self, state):
-        context = np.zeros((6 + 1 + 32 + 4 + 8))  # turret health, elixir, handcards, handcards ready, next handcard
+        context = torch.zeros((6 + 1 + 32 + 4 + 8), dtype=torch.float32)  # turret health, elixir, handcards, handcards ready, next handcard
 
         for i, team in enumerate(["ally", "enemy"]):
             context[i*3] = state["numbers"][f"{team}_king_hp"]["number"]
@@ -56,7 +59,7 @@ class SingleDeckBot():
     def _get_board_state(self, units):
         labels, tile_x, tile_y, team = units
 
-        board = np.zeros((16, TILES_Y, TILES_X), dtype=np.float32)
+        board = torch.zeros((16, TILES_Y, TILES_X), dtype=torch.float32)
         for i, label in enumerate(labels):
             if label not in self.label_to_deck_id:
                 continue
@@ -75,11 +78,12 @@ class SingleDeckBot():
         }
 
         board = self._get_board_state(state["units"])
-        emb = self.board_emb(board)
+        emb = self.board_emb(board.squeeze(0))[0]
 
         context = self._get_context(state)
 
-        # TODO concat context and emb and pass to NN
+        context = torch.cat((emb, context))
+        self.state = context
 
 
 if __name__ == "__main__":
