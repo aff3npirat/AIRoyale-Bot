@@ -46,7 +46,7 @@ class SingleDeckBot():
 
         handcards = sorted(state["cards"][1:], key=lambda x: x["deck_id"])
         handcards = filter(lambda x: x["deck_id"] >= 0, handcards)
-        for i in range(max(len(handcards, 4))):
+        for i in range(min(len(handcards, 4))):
             idx = handcards[i]["deck_id"] + 7 + i*8
             context[idx] = 1.0
             context[39+i] = int(handcards[i]["ready"])
