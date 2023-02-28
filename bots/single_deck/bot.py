@@ -70,6 +70,7 @@ class SingleDeckBot():
 
         return board
 
+    @torch.no_grad()
     def set_state(self, image):
         state = {
             "units": self.unit_detector.run(image),  # label, tile, side
