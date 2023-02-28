@@ -3,7 +3,7 @@ import numpy as np
 from state.units import UnitDetector
 from state.cards import BlueCardDetector
 from state.numbers import NumberDetector
-from state.board import BoardEmbedding
+from bots.single_deck.board import BoardEmbedding
 from constants import CARD_NAMES, PRINCESS_HP, TILES_X, TILES_Y
 
 
