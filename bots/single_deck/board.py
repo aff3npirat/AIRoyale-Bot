@@ -6,6 +6,8 @@ import torch.nn as nn
 class ResBlk(nn.Module):
     
     def __init__(self):
+        super().__init__()
+
         self.conv1 = nn.Conv2d(16, 16, (3, 3), padding=1, stride=1, bias=True)
         self.prelu = nn.PReLU(16)
         self.conv2 = nn.Conv2d(16, 16, (3, 3), padding=1, stride=1, bias=True)
