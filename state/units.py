@@ -25,7 +25,7 @@ class UnitDetector(OnnxDetector):
         bboxes = np.round(predictions[:, :4])
         sides = np.ones(len(predictions))
         for i in range(len(predictions)):
-            l = predictions[i, 6]
+            l = int(predictions[i, 5])
 
             name = CARD_NAMES[l]
             if name not in self.ally_units:
