@@ -24,7 +24,7 @@ class UnitDetector(OnnxDetector):
     def calculate_side(self, image, predictions):
         bboxes = np.round(predictions[:, :4])
         sides = np.ones(len(predictions))
-        for i in range(predictions):
+        for i in range(len(predictions)):
             l = predictions[i, 6]
 
             name = CARD_NAMES[l]
@@ -56,6 +56,13 @@ class UnitDetector(OnnxDetector):
         tile_y = np.round((center_y - TILE_INIT_Y) / TILE_HEIGHT)
 
         return tile_x, tile_y
+    
+    @staticmethod
+    def tile_to_xy(tile_x, tile_y):
+        x = (tile_x + 0.5) * TILE_WIDTH + TILE_INIT_X
+        y = (tile_y + 0.5) * TILE_HEIGHT + TILE_INIT_Y
+
+        return x, y
 
     def run(self, img, conf_thres=0.725, iou_thres=0.5):
         """
@@ -64,10 +71,10 @@ class UnitDetector(OnnxDetector):
         img : PIL.Image
             A PIL image with channels as last dimension. Pixel values should range from 0 to 255.
         """
-        img_transform = self._preprocess(img)
+        img_transform = self.preprocess(img)
         pred = self.sess.run([self.output_name], {self.input_name: img_transform})[0]
 
-        pred = self.nms(pred, conf_thres=conf_thres, iou_thres=iou_thres)  # shape (M, 6)
+        pred = self.nms(pred, conf_thres=conf_thres, iou_thres=iou_thres)[0]  # shape (M, 6)
 
         # transform relative coords in (UNIT_H, UNIT_W) to (height, width)
         pred[:, [0, 2]] *= SCREENSHOT_WIDTH / UNIT_W
@@ -101,7 +108,7 @@ class SideDetector(OnnxDetector):
         img : PIL.Image
             A PIL image with channels as last dimension. Pixel values should range from 0 to 255.
         """
-        img = self._preprocess(img)
+        img = self.preprocess(img)
 
         pred = self.sess.run([self.output_name], {self.input_name: img})[0]  # shape (1, 2)
         team = np.argmax(pred)

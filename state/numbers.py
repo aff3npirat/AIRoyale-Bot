@@ -64,18 +64,13 @@ class NumberDetector(OnnxDetector):
                 clean_pred = self._clean_king_levels(clean_pred)
         clean_pred = self._clean_king_hp(clean_pred)
 
-        if clean_pred["left_ally_princess_hp"]["number"] == -1:
-            clean_pred["left_ally_princess_hp"]["number"] = PRINCESS_HP[clean_pred["ally_king_level"]["number"]-1]
-        if clean_pred["right_ally_princess_hp"]["number"] == -1:
-            clean_pred["right_ally_princess_hp"]["number"] = PRINCESS_HP[clean_pred["ally_king_level"]["number"]-1]
-
         for side in ["ally", "enemy"]:
-            max_king_hp = KING_HP[clean_pred[f"{side}_king_level"]]
-            max_princess_hp = PRINCESS_HP[clean_pred[f"{side}_king_level"]]
+            max_king_hp = KING_HP[clean_pred[f"{side}_king_level"]["number"]]
+            max_princess_hp = PRINCESS_HP[clean_pred[f"{side}_king_level"]["number"]]
 
-            clean_pred[f"{side}_king_hp"] /= max_king_hp
+            clean_pred[f"{side}_king_hp"]["number"] /= max_king_hp
             for pos in ["left", "right"]:
-                clean_pred[f"{pos}_{side}_princess_hp"] /= max_princess_hp
+                clean_pred[f"{pos}_{side}_princess_hp"]["number"] /= max_princess_hp
 
         return clean_pred
     
