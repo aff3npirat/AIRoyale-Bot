@@ -10,13 +10,13 @@ class BotBase:
         self.state = None
 
 
-    def set_state(self, image):
+    def get_state(self, image):
         """
         Extracts state from image.
         """
         raise NotImplementedError
     
-    def set_actions(self, state):
+    def get_actions(self, state):
         """
         Choose actions for given state.
         """
@@ -57,9 +57,9 @@ class BotBase:
         image = self.screen.take_screenshot()
         while not self.is_game_end(image):
 
-            self.set_state(image)
-            self.set_actions(self.state)
-            self.play_actions(self.actions)
+            state = self.get_state(image)
+            actions = self.get_actions(state)
+            self.play_actions(actions)
 
             image = self.screen.take_screenshot()
 
