@@ -21,9 +21,17 @@ UNIT_W = 416
 UNIT_H = 416
 
 # Bounding box of elixir, turret helth bars, king level
+ELIXIR_X = 100
+ELIXIR_Y = 628
+ELIXIR_W = 250
+ELIXIR_H = 15
+ELIXIR_BOUNDING_BOX = (ELIXIR_X, ELIXIR_Y, ELIXIR_X + ELIXIR_W, ELIXIR_Y + ELIXIR_H)
+
 _W = 28
 _H = 7
 KING_HP_X = 188
+ALLY_KING_HP_Y = 15
+ENEMY_KING_HP_Y = 495
 LEFT_PRINCESS_HP_X = 74
 RIGHT_PRINCESS_HP_X = 266
 ALLY_PRINCESS_HP_Y = 401
@@ -32,10 +40,9 @@ ENEMY_KING_LEVEL_Y = 19
 ALLY_KING_LEVEL_Y = 487
 KING_LEVEL_X = 134
 KING_LEVEL_2_X = KING_LEVEL_X + _W
-ELIXIR_BOUNDING_BOX = (100, 628, 350, 643)
 TOWER_HP_BOXES = [
-    ['enemy_king_hp', (KING_HP_X, 15, 188 + _W, 15 + _H)],
-    ['ally_king_hp', (KING_HP_X, 495, 188 + _W, 495 + _H)],
+    ['enemy_king_hp', (KING_HP_X, ALLY_KING_HP_Y, KING_HP_X + _W, ALLY_KING_HP_Y + _H)],
+    ['ally_king_hp', (KING_HP_X, ENEMY_KING_HP_Y, KING_HP_X + _W, ENEMY_KING_HP_Y + _H)],
     ['right_ally_princess_hp',
      (RIGHT_PRINCESS_HP_X, ALLY_PRINCESS_HP_Y, RIGHT_PRINCESS_HP_X + _W, ALLY_PRINCESS_HP_Y + _H)],
     ['left_ally_princess_hp',
@@ -80,7 +87,7 @@ MULTI_HASH_SCALE = 0.355
 MULTI_HASH_INTERCEPT = 163
 
 # card names
-CARD_NAMES = [
+UNIT_NAMES = [
     'archer',
     'arrows', 
     'cagegoblin', 
@@ -102,3 +109,8 @@ CARD_NAMES = [
     'tombstone', 
     'skeleton'
 ]
+
+CARD_TO_UNITS = {
+    "archers": "archer",
+    "minions": "minion",
+}

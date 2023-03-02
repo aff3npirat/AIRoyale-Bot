@@ -2,15 +2,41 @@ import numpy as np
 from PIL import Image
 
 from state.onnx_detector import OnnxDetector
-from constants import SIDE_H, SIDE_W, UNIT_H, UNIT_W, CARD_NAMES, TILE_INIT_X, TILE_INIT_Y, TILE_WIDTH, TILE_HEIGHT, SCREENSHOT_HEIGHT, SCREENSHOT_WIDTH, CARD_Y
+from constants import (
+    SIDE_H,
+    SIDE_W,
+    UNIT_H,
+    UNIT_W,
+    UNIT_NAMES,
+    CARD_TO_UNITS,
+    TILE_INIT_X,
+    TILE_INIT_Y,
+    TILE_WIDTH,
+    TILE_HEIGHT,
+    SCREENSHOT_HEIGHT,
+    SCREENSHOT_WIDTH,
+    CARD_Y
+)
 
 
 
 class UnitDetector(OnnxDetector):
     
-    def __init__(self, model_path, side_detector_path, ally_units):
+    def __init__(self, model_path, side_detector_path, ally_cards):
         super().__init__(model_path)
         self.side_detector = SideDetector(side_detector_path)
+
+        ally_units = []
+        for card in ally_cards:
+            if card in CARD_TO_UNITS:
+                units = CARD_TO_UNITS[card]
+                if not isinstance(units, list):
+                    units = [units]
+
+                ally_units += units
+            else:
+                ally_units.append(card)
+                    
         self.ally_units = ally_units
 
     @staticmethod
@@ -27,7 +53,7 @@ class UnitDetector(OnnxDetector):
         for i in range(len(predictions)):
             l = int(predictions[i, 5])
 
-            name = CARD_NAMES[l]
+            name = UNIT_NAMES[l]
             if name not in self.ally_units:
                 continue
             else:
