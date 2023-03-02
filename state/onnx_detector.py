@@ -80,5 +80,5 @@ class OnnxDetector:
             # Keep only the best class
             best = np.hstack([boxes[keep], best_scores[keep], best_scores_idx[keep]])
 
-            output[i] = best
+            output[i] = best  # bbox, score, label
         return output
