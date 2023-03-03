@@ -49,7 +49,7 @@ class BoardEmbedding(nn.Module):
         x = x.unsqueeze(0)
         x = self.blocks(x)
         x = self.downsample(x)
-        x = x.flatten(1)
+        x = x.flatten(0)
         x = self.linear(x)
         return x
     
