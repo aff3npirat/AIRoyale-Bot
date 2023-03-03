@@ -28,6 +28,8 @@ class SingleDeckBot(BotBase):
     """
 
     def __init__(self, unit_model_path, number_model_path, side_model_path, deck_names):
+        super().__init__()
+
         self.unit_detector = UnitDetector(unit_model_path, side_model_path, deck_names)
         self.number_detector = NumberDetector(number_model_path)
         self.card_detector = BlueCardDetector(card_names=deck_names)
@@ -76,6 +78,11 @@ class SingleDeckBot(BotBase):
     def _get_board_state(self, units):
         labels, tile_x, tile_y, team = units
 
+        labels = labels.astype(np.int32)
+        tile_x = tile_x.astype(np.int32)
+        tile_y = tile_y.astype(np.int32)
+        team = team.astype(np.int32)
+
         board = torch.zeros((16, TILES_Y, TILES_X), dtype=torch.float32)
         for i, label in enumerate(labels):
             if label not in self.label_to_deck_id:
@@ -120,6 +127,11 @@ class SingleDeckBot(BotBase):
         slot_idx = self.handcards.index(self.sorted_handcards[action]["name"])
         return slot_idx
     
+    @staticmethod
+    def is_game_end(image):
+        # TODO
+        return False
+    
 
 if __name__ == "__main__":
     # debugging purposes
@@ -128,8 +140,13 @@ if __name__ == "__main__":
     from constants import TILE_WIDTH, TILE_HEIGHT, TOWER_HP_BOXES, ELIXIR_BOUNDING_BOX, CARD_CONFIG
 
 
-    deck_names = [...]  # TODO
-    bot = SingleDeckBot()
+    deck_names = ["minions", "giant", "arrows", "musketeer", "minipekka", "knight", "archers", "fireball"]  # TODO
+    bot = SingleDeckBot(
+        "./models/units_cpu.onnx",
+        "./models/number_cpu.onnx",
+        "./models/side_cpu.onnx",
+        deck_names,
+    )
 
     font = ImageFont.load_default()
 

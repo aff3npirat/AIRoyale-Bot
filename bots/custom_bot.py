@@ -6,8 +6,6 @@ class BotBase:
 
     def __init__(self):
         self.screen = Screen()
-        
-        self.state = None
 
 
     def get_state(self, image):
