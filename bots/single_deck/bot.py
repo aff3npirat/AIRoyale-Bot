@@ -50,11 +50,10 @@ class SingleDeckBot(BotBase):
 
         for i, team in enumerate(["ally", "enemy"]):
             context[i*3] = numbers[f"{team}_king_hp"]["number"]
-            level = numbers[f"{team}_king_level"]["number"]
             for j, side in enumerate(["right", "left"]):
                 hp = numbers[f"{side}_{team}_princess_hp"]["number"]
-                if team == "ally" and hp == -1 and not self.princess_damaged[side]:
-                    hp = PRINCESS_HP[level]
+                if team == "ally" and hp < 0 and not self.princess_damaged[side]:
+                    hp = 1.0
                 elif hp >= 0 and not self.princess_damaged[side]:
                     self.princess_damaged[side] = True
 
