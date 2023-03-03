@@ -65,7 +65,8 @@ class SingleDeckBot(BotBase):
         
         handcards = sorted(filter(lambda x: x["deck_id"] >= 0, cards[1:]), key=lambda x: x["deck_id"])
         self.sorted_handcards = handcards
-        for i in range(min(len(handcards), 4)):
+        self.illegal_actions = 4 - len(handcards)
+        for i in range(len(handcards)):
             idx = handcards[i]["deck_id"] + CARDS_START + i*8
             context[idx] = 1.0
             context[READY_START+i] = int(handcards[i]["ready"])
@@ -103,12 +104,10 @@ class SingleDeckBot(BotBase):
         }
 
         self.handcards = [x["name"] for x in state["cards"][1:]]
-        self.illegal_actions = torch.tensor([(x["deck_id"]==-1) or (x["ready"]==0) for x in state["cards"][1:]] + [False])
+        context = self._get_context(state["numbers"], state["cards"])
 
         board = self._get_board_state(state["units"])
         emb = self.board_emb(board)
-
-        context = self._get_context(state["numbers"], state["cards"])
 
         return torch.cat((emb, context))
     
@@ -118,12 +117,13 @@ class SingleDeckBot(BotBase):
             action = (1 - self.illegal_actions.to(torch.float)).multinomial(1)
         else:
             q_vals = self.Q_net(state)
-            q_vals[self.illegal_actions] = -torch.inf
+            q_vals[-self.illegal_actions:] = -torch.inf
             action = torch.argmax(q_vals)
 
-        if action == 4:
+        if action == 0:
             return -1
         
+        action -= 1
         slot_idx = self.handcards.index(self.sorted_handcards[action]["name"])
         return slot_idx
     
@@ -188,20 +188,21 @@ if __name__ == "__main__":
         ak, ar, al, ek, er, el = context[:HEALTH_END]
         hp_nums = [ek, ak, ar, al, er, el]
         for i in range(6):
-            num = f"{hp_nums[i]}"
+            num = f"{hp_nums[i]:.2f}"
             _, (x1, y1, _, _) = TOWER_HP_BOXES[i]
 
             draw.text((x1, y1), num, fill="black", font=font, anchor="lb")
 
         # draw elixir
         elixir = f"{context[ELIXIR]}"
-        draw.text(ELIXIR_BOUNDING_BOX[:2], elixir, anchor="lb", font=font)
+        draw.text(ELIXIR_BOUNDING_BOX[:2], elixir, anchor="lb", font=font, fill="black")
 
         # draw next card
         next_card_id = context[NEXT_CARD_START:NEXT_CARD_END].nonzero(as_tuple=False)
         assert len(next_card_id) <= 1, "Detected more than 1 next card"
-        name = deck_names[int(next_card_id[0].item())]
-        draw.text(CARD_CONFIG[0][:2], name, anchor="lb", fill="black", font=font)
+        if len(next_card_id) == 1:
+            name = deck_names[int(next_card_id[0].item())]
+            draw.text(CARD_CONFIG[0][:2], name, anchor="lb", fill="black", font=font)
 
         # draw handcards
         handcards = context[CARDS_START:CARDS_END]
@@ -238,10 +239,10 @@ if __name__ == "__main__":
         # draw choosen action
         if action == -1:
             bbox = CARD_CONFIG[1]
-            draw.rectangle(bbox, outline="red")
+            draw.rectangle(bbox, outline="red", width=2)
         else:  # highlight choosen slot
             bbox = CARD_CONFIG[action+1]
-            draw.rectangle(bbox, outline="green")
+            draw.rectangle(bbox, outline="green", width=2)
 
         conc_img.paste(image, (0, 0))
         conc_img.save(f"./output/debug/debug_img_{count}.png")
