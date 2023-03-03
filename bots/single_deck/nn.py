@@ -46,6 +46,7 @@ class BoardEmbedding(nn.Module):
         self.linear = nn.Linear(14*8*16, 512, bias=False)
 
     def forward(self, x):
+        x = x.unsqueeze(0)
         x = self.blocks(x)
         x = self.downsample(x)
         x = x.flatten(1)
@@ -97,4 +98,4 @@ class DenseNet(nn.Module):
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
-        return self.layers(x)
+        return self.layers(x.unsqueeze(0))
