@@ -102,8 +102,8 @@ class SingleDeckBot(BotBase):
             "cards": self.card_detector.run(image),
         }
 
-        self.handcards = map(lambda x: x["name"], state["cards"][1:])
-        self.illegal_actions = torch.tensor(list(map(lambda x: (x["deck_id"]==-1) or (x["ready"]==0), state["cards"][1:])) + [False])
+        self.handcards = [x["name"] for x in state["cards"][1:]]
+        self.illegal_actions = torch.tensor([(x["deck_id"]==-1) or (x["ready"]==0) for x in state["cards"][1:]] + [False])
 
         board = self._get_board_state(state["units"])
         emb = self.board_emb(board)
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     from constants import TILE_WIDTH, TILE_HEIGHT, TOWER_HP_BOXES, ELIXIR_BOUNDING_BOX, CARD_CONFIG
 
 
-    deck_names = ["minions", "giant", "arrows", "musketeer", "minipekka", "knight", "archers", "fireball"]  # TODO
+    deck_names = ["minions", "giant", "arrows", "musketeer", "minipekka", "knight", "archers", "fireball"]
     bot = SingleDeckBot(
         "./models/units_cpu.onnx",
         "./models/number_cpu.onnx",
@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
     font = ImageFont.load_default()
 
-    i = 0
+    count = 0
     image = bot.screen.take_screenshot()
     width, height = image.size
     while not bot.is_game_end(image):
@@ -165,7 +165,7 @@ if __name__ == "__main__":
         label, tile_x, tile_y, team = units
         x, y = UnitDetector.tile_to_xy(tile_x, tile_y)
         for i in range(len(label)):
-            name = UNIT_NAMES[label[i]]
+            name = UNIT_NAMES[int(label[i])]
             color = "red"
             if team[i] == 0:
                 color = "blue"
@@ -210,7 +210,7 @@ if __name__ == "__main__":
         assert len(deck_ids) <= 4, "More than 4 handcards detected"
         assert torch.sum(ready) <= len(deck_ids), "Detected more handcards ready as cards on hand"
         for i in range(len(deck_ids)):
-            name = deck_names[int(deck_ids[i].item())]
+            name = deck_names[int(deck_ids[i].item() - i*8)]
             slot_idx = bot.handcards.index(name)
             ready_ = ready[i]
 
@@ -244,10 +244,10 @@ if __name__ == "__main__":
             draw.rectangle(bbox, outline="green")
 
         conc_img.paste(image, (0, 0))
-        conc_img.save(f"./output/debug/debug_img_{i}.png")
+        conc_img.save(f"./output/debug/debug_img_{count}.png")
 
         image = bot.screen.take_screenshot()
-        i += 1
+        count += 1
 
     victory = bot.is_victory(image)
     # TODO draw victory or loss on image
