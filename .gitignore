@@ -1,6 +1,7 @@
 # project specific
 debug.py
 output/
+.vscode/
 
 # jupyter
 *.ipynb

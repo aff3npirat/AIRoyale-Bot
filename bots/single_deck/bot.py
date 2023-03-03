@@ -113,7 +113,7 @@ class SingleDeckBot(BotBase):
         return torch.cat((emb, context))
     
     @torch.no_grad()
-    def get_actions(self, state, eps=0.01):
+    def get_actions(self, state, eps=0.0):
         if np.random.rand() < eps:
             action = (1 - self.illegal_actions.to(torch.float)).multinomial(1)
         else:
