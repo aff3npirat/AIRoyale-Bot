@@ -113,7 +113,7 @@ class SingleDeckBot(BotBase):
     @torch.no_grad()
     def get_actions(self, state, eps=0.0):
         if np.random.rand() < eps:
-            action = (1 - self.illegal_actions.to(torch.float)).multinomial(1)
+            action = np.random.choice(np.arange(5-self.illegal_actions))
         else:
             q_vals = self.Q_net(state)
             q_vals[-self.illegal_actions:] = -torch.inf
@@ -230,7 +230,7 @@ if __name__ == "__main__":
             color = "red"
             if c < 8:
                 color = "blue"
-            draw.ellipse([(x1, y1), (x2, y2)], outline=color, width=1.0)
+            draw.ellipse([(x1, y1), (x2, y2)], outline=color, width=1)
             
             # draw unit labels from state vector
             draw.text((x2, y1), deck_names[c%8], fill=color, font=font, anchor="lt")
