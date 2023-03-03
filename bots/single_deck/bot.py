@@ -54,7 +54,7 @@ class SingleDeckBot(BotBase):
                 hp = numbers[f"{side}_{team}_princess_hp"]["number"]
                 if team == "ally" and hp < 0 and not self.princess_damaged[side]:
                     hp = 1.0
-                elif hp >= 0 and not self.princess_damaged[side]:
+                elif team == "ally" and hp >= 0 and not self.princess_damaged[side]:
                     self.princess_damaged[side] = True
 
                 context[i*3 + j + 1] = hp if hp >= 0 else 0.0
