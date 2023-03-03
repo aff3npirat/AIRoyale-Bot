@@ -5,8 +5,7 @@ from bots.custom_bot import BotBase
 from state.units import UnitDetector
 from state.cards import BlueCardDetector
 from state.numbers import NumberDetector
-from bots.single_deck.board import BoardEmbedding
-from bots.single_deck.q_net import QNet
+from bots.single_deck.nn import BoardEmbedding, DenseNet
 from constants import UNIT_NAMES, PRINCESS_HP, TILES_X, TILES_Y
 
 
@@ -21,7 +20,7 @@ class SingleDeckBot(BotBase):
         self.number_detector = NumberDetector(number_model_path)
         self.card_detector = BlueCardDetector(card_names=deck_names)
         self.board_emb = BoardEmbedding()
-        self.Q_net = QNet()
+        self.Q_net = DenseNet([512+51, 128, 64, 5], activation="sigmoid", bias=True, feature_extractor=False)
 
         self.label_to_deck_id = {UNIT_NAMES.index(name): i for i, name in enumerate(deck_names)}
         self.princess_damaged = {"right": False, "left": False}
