@@ -6,8 +6,20 @@ from state.units import UnitDetector
 from state.cards import BlueCardDetector
 from state.numbers import NumberDetector
 from bots.single_deck.nn import BoardEmbedding, DenseNet
-from constants import UNIT_NAMES, PRINCESS_HP, TILES_X, TILES_Y
+from constants import UNIT_NAMES, PRINCESS_HP, TILES_X, TILES_Y, CARD_TO_UNITS
 
+
+
+EMB_SIZE = 512
+HEALTH_START = 0
+HEALTH_END = 6
+ELIXIR = 6
+CARDS_START = 7
+CARDS_END = 39
+READY_START = 39
+READY_END = 43
+NEXT_CARD_START = 43
+NEXT_CARD_END = 51
 
 
 class SingleDeckBot(BotBase):
@@ -22,11 +34,17 @@ class SingleDeckBot(BotBase):
         self.board_emb = BoardEmbedding()
         self.Q_net = DenseNet([512+51, 128, 64, 5], activation="sigmoid", bias=True, feature_extractor=False)
 
-        self.label_to_deck_id = {UNIT_NAMES.index(name): i for i, name in enumerate(deck_names)}
+        label_to_deck_id = {}
+        for i, name in enumerate(deck_names):
+            if name in CARD_TO_UNITS:
+                name = CARD_TO_UNITS[name]
+            label_to_deck_id[UNIT_NAMES.index(name)] = i
+        self.label_to_deck_id = label_to_deck_id
+
         self.princess_damaged = {"right": False, "left": False}
 
     def _get_context(self, numbers, cards):
-        context = torch.zeros((6 + 1 + 32 + 4 + 8), dtype=torch.float32)  # turret health, elixir, handcards, handcards ready, next handcard
+        context = torch.zeros((NEXT_CARD_END), dtype=torch.float32)  # turret health, elixir, handcards, handcards ready, next handcard
 
         for i, team in enumerate(["ally", "enemy"]):
             context[i*3] = numbers[f"{team}_king_hp"]["number"]
@@ -40,17 +58,17 @@ class SingleDeckBot(BotBase):
 
                 context[i*3 + j + 1] = hp if hp >= 0 else 0.0
 
-        context[6] = numbers["elixir"]["number"]
+        context[ELIXIR] = numbers["elixir"]["number"]
 
         
         handcards = sorted(filter(lambda x: x["deck_id"] >= 0, cards[1:]), key=lambda x: x["deck_id"])
         self.sorted_handcards = handcards
         for i in range(min(len(handcards), 4)):
-            idx = handcards[i]["deck_id"] + 7 + i*8
+            idx = handcards[i]["deck_id"] + CARDS_START + i*8
             context[idx] = 1.0
-            context[39+i] = int(handcards[i]["ready"])
+            context[READY_START+i] = int(handcards[i]["ready"])
 
-        idx = cards[0]["deck_id"] + 43
+        idx = cards[0]["deck_id"] + READY_END
         context[idx] = 1.0
 
         return context
@@ -96,7 +114,7 @@ class SingleDeckBot(BotBase):
             q_vals[self.illegal_actions] = -torch.inf
             action = torch.argmax(q_vals)
 
-        if action == 5:
+        if action == 4:
             return -1
         
         slot_idx = self.handcards.index(self.sorted_handcards[action]["name"])
@@ -105,59 +123,112 @@ class SingleDeckBot(BotBase):
 
 if __name__ == "__main__":
     # debugging purposes
-    from PIL import ImageDraw, ImageFont
+    from PIL import ImageDraw, ImageFont, Image
 
-    from constants import TILE_WIDTH, TILE_HEIGHT, TOWER_HP_BOXES, ELIXIR_BOUNDING_BOX
+    from constants import TILE_WIDTH, TILE_HEIGHT, TOWER_HP_BOXES, ELIXIR_BOUNDING_BOX, CARD_CONFIG
 
 
+    deck_names = [...]  # TODO
     bot = SingleDeckBot()
 
     font = ImageFont.load_default()
 
     i = 0
     image = bot.screen.take_screenshot()
+    width, height = image.size
     while bot.is_game_end(image):
         state = bot.get_state(image)
         action = bot.get_actions(state)
-        bot.play_actions(action)
 
         units = bot.unit_detector.run(image)
 
-        board = bot._get_board_state(units)
-        context = state[512:]
+        # draw unit labels from unit detector
+        image_ = image.copy()
+        draw_ = ImageDraw.Draw(image_)
+        label, tile_x, tile_y, team = units
+        x, y = UnitDetector.tile_to_xy(tile_x, tile_y)
+        for i in range(len(label)):
+            name = UNIT_NAMES[label[i]]
+            color = "red"
+            if team[i] == 0:
+                color = "blue"
+            draw_.text((x[i], y[i]), name, fill=color, font=font, anchor="lb")
 
-        ak, ar, al, ek, er, el = context[:6]
-        hp_nums = [ek, ak, ar, al, er, el]
+        # final image will contain bot view and unit detector view
+        conc_img = Image.new("RGB", (width*2, height))
+        conc_img.paste(image_, (width, 0))
+
+        del image_
+        del draw_
+
+
+        board = bot._get_board_state(units)
+        context = state[EMB_SIZE:]
 
         draw = ImageDraw.Draw(image)
+
+        # draw health
+        ak, ar, al, ek, er, el = context[:HEALTH_END]
+        hp_nums = [ek, ak, ar, al, er, el]
         for i in range(6):
             num = f"{hp_nums[i]}"
             _, (x1, y1, _, _) = TOWER_HP_BOXES[i]
 
-            draw.text((x1, y1), num, fill="black", font=font)
+            draw.text((x1, y1), num, fill="black", font=font, anchor="lb")
 
-        elixir = f"{context[6]}"
-        draw.text(ELIXIR_BOUNDING_BOX[:2], elixir)
+        # draw elixir
+        elixir = f"{context[ELIXIR]}"
+        draw.text(ELIXIR_BOUNDING_BOX[:2], elixir, anchor="lb", font=font)
 
-        for i in range(board.shape[1]):
-            for j in range(board.shape[2]):
-                for c in range(board.shape[0]):
-                    if board[c, i, j] != 1.0:
-                        continue
+        # draw next card
+        next_card_id = context[NEXT_CARD_START:NEXT_CARD_END].nonzero(as_tuple=False)
+        assert len(next_card_id) <= 1, "Detected more than 1 next card"
+        name = deck_names[int(next_card_id[0].item())]
+        draw.text(CARD_CONFIG[0][:2], name, anchor="lb", fill="black", font=font)
 
-                    x, y = UnitDetector.tile_to_xy(j, i)
-                    x1 = x - TILE_WIDTH/4
-                    x2 = x + TILE_WIDTH/4
-                    y1 = y - TILE_HEIGHT/4
-                    y2 = y + TILE_HEIGHT/4
+        # draw handcards
+        handcards = context[CARDS_START:CARDS_END]
+        deck_ids = handcards.nonzero(as_tuple=False)
+        ready = context[READY_START:READY_END]
+        assert len(deck_ids) <= 4, "More than 4 handcards detected"
+        assert torch.sum(ready) <= len(deck_ids), "Detected more handcards ready as cards on hand"
+        for i in range(len(deck_ids)):
+            name = deck_names[int(deck_ids[i].item())]
+            slot_idx = bot.handcards.index(name)
+            ready_ = ready[i]
 
-                    color = "red"
-                    if c < 8:
-                        color = "blue"
-                    draw.ellipse([(x1, y1), (x2, y2)], outline=color, width=1.0)
+            color = "black" if ready_ else "red"
+            draw.text(CARD_CONFIG[slot_idx+1][:2], name, anchor="lb", fill=color, font=font)
 
-        image.save(f"./output/debug/debug_img_{i}.png")
-        
+        # draw unit tiles
+        for idxs in board.nonzero(as_tuple=False):
+            c, y, x = idxs
+
+            x, y = UnitDetector.tile_to_xy(x, y)
+            x1 = x - TILE_WIDTH/4
+            x2 = x + TILE_WIDTH/4
+            y1 = y - TILE_HEIGHT/4
+            y2 = y + TILE_HEIGHT/4
+
+            color = "red"
+            if c < 8:
+                color = "blue"
+            draw.ellipse([(x1, y1), (x2, y2)], outline=color, width=1.0)
+            
+            # draw unit labels from state vector
+            draw.text((x2, y1), deck_names[c%8], fill=color, font=font, anchor="lt")
+
+        # draw choosen action
+        if action == -1:
+            bbox = CARD_CONFIG[1]
+            draw.rectangle(bbox, outline="red")
+        else:  # highlight choosen slot
+            bbox = CARD_CONFIG[action+1]
+            draw.rectangle(bbox, outline="green")
+
+        conc_img.paste(image, (0, 0))
+        conc_img.save(f"./output/debug/debug_img_{i}.png")
+
         image = bot.screen.take_screenshot()
         i += 1
 
