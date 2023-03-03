@@ -63,7 +63,7 @@ class ConcatLayer(nn.Module):
 
     def forward(self, x):
         out = self.net(x)
-        return torch.cat((x, out))
+        return torch.cat((x, out), dim=1)
     
 
 class DenseNet(nn.Module):
@@ -98,4 +98,4 @@ class DenseNet(nn.Module):
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
-        return self.layers(x.unsqueeze(0))
+        return self.layers(x.unsqueeze(0)).squeeze(0)
