@@ -119,7 +119,7 @@ class SingleDeckBot(BotBase):
         
         slot_idx = self.handcards.index(self.sorted_handcards[action]["name"])
         return slot_idx
-
+    
 
 if __name__ == "__main__":
     # debugging purposes
@@ -136,7 +136,7 @@ if __name__ == "__main__":
     i = 0
     image = bot.screen.take_screenshot()
     width, height = image.size
-    while bot.is_game_end(image):
+    while not bot.is_game_end(image):
         state = bot.get_state(image)
         action = bot.get_actions(state)
 
