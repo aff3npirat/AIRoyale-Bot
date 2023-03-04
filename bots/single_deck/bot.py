@@ -99,11 +99,9 @@ class SingleDeckBot(BotBase):
     def get_state(self, image):
         units = self.unit_detector.run(image)  # label, tile, side
         numbers = self.number_detector.run(image)
-        NumberDetector.relative_tower_hp(numbers)
-
         cards = self.card_detector.run(image)
 
-        self.raw_state = state
+        NumberDetector.relative_tower_hp(numbers)
 
         self.handcards = [x["name"] for x in cards[1:]]
         context = self._get_context(numbers, cards)
@@ -165,9 +163,7 @@ if __name__ == "__main__":
         state = bot.get_state(image)
         action = bot.get_actions(state)
 
-        units = bot.raw_state["units"]
-
-        torch.save(bot.raw_state, f"{OUTPUT}/detector_state_{count}.pt")
+        units = bot.unit_detector.run(image)
 
         # draw unit labels from unit detector
         image_ = image.copy()
