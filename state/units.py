@@ -107,10 +107,9 @@ class UnitDetector(OnnxDetector):
         pred[:, [1, 3]] *= SCREENSHOT_HEIGHT / UNIT_H
 
         sides = self.calculate_side(img, pred)
-        tile_x, tile_y = self.box_to_tile(pred[:, :4])
         labels = pred[:, 5]
 
-        return labels, tile_x, tile_y, sides
+        return labels, pred[:4], sides
 
 
 class SideDetector(OnnxDetector):

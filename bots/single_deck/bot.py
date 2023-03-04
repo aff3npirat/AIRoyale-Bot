@@ -76,7 +76,8 @@ class SingleDeckBot(BotBase):
         return context
     
     def _get_board_state(self, units):
-        labels, tile_x, tile_y, team = units
+        labels, bboxes, tile_y, team = units
+        tile_x, tile_y = UnitDetector.box_to_tile(bboxes)
 
         labels = labels.astype(np.int32)
         tile_x = tile_x.astype(np.int32)
