@@ -103,6 +103,8 @@ class SingleDeckBot(BotBase):
             "cards": self.card_detector.run(image),
         }
 
+        self.raw_state = state
+
         self.handcards = [x["name"] for x in state["cards"][1:]]
         context = self._get_context(state["numbers"], state["cards"])
 
@@ -135,9 +137,15 @@ class SingleDeckBot(BotBase):
 
 if __name__ == "__main__":
     # debugging purposes
+    import os
+
     from PIL import ImageDraw, ImageFont, Image
 
     from constants import TILE_WIDTH, TILE_HEIGHT, TOWER_HP_BOXES, ELIXIR_BOUNDING_BOX, CARD_CONFIG
+
+    OUTPUT = "./debug/single_deck_bot"
+    if not os.path.exists(OUTPUT):
+        os.makedirs(OUTPUT)
 
 
     deck_names = ["minions", "giant", "arrows", "musketeer", "minipekka", "knight", "archers", "fireball"]
@@ -157,19 +165,22 @@ if __name__ == "__main__":
         state = bot.get_state(image)
         action = bot.get_actions(state)
 
-        units = bot.unit_detector.run(image)
+        units = bot.raw_state["units"]
+
+        torch.save(bot.raw_state)
 
         # draw unit labels from unit detector
         image_ = image.copy()
         draw_ = ImageDraw.Draw(image_)
-        label, tile_x, tile_y, team = units
-        x, y = UnitDetector.tile_to_xy(tile_x, tile_y)
+        label, bboxes, team = units
         for i in range(len(label)):
             name = UNIT_NAMES[int(label[i])]
             color = "red"
             if team[i] == 0:
                 color = "blue"
-            draw_.text((x[i], y[i]), name, fill=color, font=font, anchor="lb")
+            x1, y1, x2, y2 = bboxes[i]
+            draw_.rectangle((x1, y1, x2, y2), outline=color, width=2)
+            draw_.text((x1, y1), name, fill=color, font=font, anchor="lb")
 
         # final image will contain bot view and unit detector view
         conc_img = Image.new("RGB", (width*2, height))
