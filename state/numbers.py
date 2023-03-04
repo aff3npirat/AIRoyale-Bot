@@ -47,7 +47,7 @@ class NumberDetector(OnnxDetector):
 
             max_princess_hp = PRINCESS_HP[level-1]
             for side in ["right", "left"]:
-                pred[f"{side}_{team}_princess_hp"] /= max_princess_hp
+                pred[f"{side}_{team}_princess_hp"]["number"] /= max_princess_hp
 
     @staticmethod
     def _calculate_confidence_and_number(pred):
