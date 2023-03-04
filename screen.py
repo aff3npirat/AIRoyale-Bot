@@ -7,9 +7,10 @@ from constants import SCREENSHOT_WIDTH, SCREENSHOT_HEIGHT
 
 
 class Screen:
-    def __init__(self):
+    
+    def __init__(self, adb_path=r"..\adb\adb.exe"):
         # Physical size: 720x1280 -> self.width = 720, self.height = 1280
-        self.adb_exec = r"..\adb\adb.exe"
+        self.adb_exec = adb_path
         window_size = subprocess.check_output([self.adb_exec, '-s', 'localhost:5555', 'shell', 'wm', 'size'])
         window_size = window_size.decode('ascii').replace('Physical size: ', '')
         self.width, self.height = [int(i) for i in window_size.split('x')]
