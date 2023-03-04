@@ -7,6 +7,8 @@ from constants import (
     SIDE_W,
     UNIT_H,
     UNIT_W,
+    UNIT_Y_START,
+    UNIT_Y_END,
     UNIT_NAMES,
     CARD_TO_UNITS,
     TILE_INIT_X,
@@ -41,6 +43,7 @@ class UnitDetector(OnnxDetector):
 
     @staticmethod
     def preprocess(img):
+        img = img.crop((0, UNIT_Y_START, img.width, UNIT_Y_END))
         img = img.resize((UNIT_H, UNIT_W), Image.BICUBIC)
         img = np.array(img, dtype=np.float32)
         img = img.transpose(2, 0, 1)
@@ -98,13 +101,14 @@ class UnitDetector(OnnxDetector):
             A PIL image with channels as last dimension. Pixel values should range from 0 to 255.
         """
         img_transform = self.preprocess(img)
-        pred = self.sess.run([self.output_name], {self.input_name: img_transform})[0]
+        pred = self.sess.run([self.output_name], {self.input_name: img_transform})[0]  # returns absolute coords
 
         pred = self.nms(pred, conf_thres=conf_thres, iou_thres=iou_thres)[0]  # shape (M, 6)
 
-        # transform relative coords in (UNIT_H, UNIT_W) to (height, width)
+        # get absolute coords in unprocessed image
         pred[:, [0, 2]] *= SCREENSHOT_WIDTH / UNIT_W
-        pred[:, [1, 3]] *= SCREENSHOT_HEIGHT / UNIT_H
+        pred[:, [1, 3]] *= (UNIT_Y_END - UNIT_Y_START) / UNIT_H
+        pred[:, [1, 3]] += UNIT_Y_START
 
         sides = self.calculate_side(img, pred)
         labels = pred[:, 5]

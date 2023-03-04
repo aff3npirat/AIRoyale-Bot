@@ -146,7 +146,7 @@ if __name__ == "__main__":
         os.makedirs(OUTPUT)
 
 
-    deck_names = ["minions", "giant", "arrows", "musketeer", "minipekka", "knight", "archers", "fireball"]
+    deck_names = ["minions", "giant", "goblins", "musketeer", "minipekka", "knight", "archers", "arrows"]
     bot = SingleDeckBot(
         "./models/units_cpu.onnx",
         "./models/number_cpu.onnx",
@@ -163,7 +163,7 @@ if __name__ == "__main__":
         state = bot.get_state(image)
         action = bot.get_actions(state)
 
-        units = bot.unit_detector.run(image)
+        units = bot.unit_detector.run(image, conf_thres=0.35, iou_thres=0.45)
 
         # draw unit labels from unit detector
         image_ = image.copy()

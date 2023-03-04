@@ -17,6 +17,8 @@ SIDE_W = 16
 SIDE_H = 16
 
 # size of image for unit detector
+UNIT_Y_START = 32.6
+UNIT_Y_END = 521.6
 UNIT_W = 416
 UNIT_H = 416
 
@@ -112,4 +114,5 @@ UNIT_NAMES = [
 CARD_TO_UNITS = {
     "archers": "archer",
     "minions": "minion",
+    "goblins": "goblin",
 }
