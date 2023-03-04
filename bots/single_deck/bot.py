@@ -97,18 +97,18 @@ class SingleDeckBot(BotBase):
 
     @torch.no_grad()
     def get_state(self, image):
-        state = {
-            "units": self.unit_detector.run(image),  # label, tile, side
-            "numbers": self.number_detector.run(image),
-            "cards": self.card_detector.run(image),
-        }
+        units = self.unit_detector.run(image)  # label, tile, side
+        numbers = self.number_detector.run(image)
+        NumberDetector.relative_tower_hp(numbers)
+
+        cards = self.card_detector.run(image)
 
         self.raw_state = state
 
-        self.handcards = [x["name"] for x in state["cards"][1:]]
-        context = self._get_context(state["numbers"], state["cards"])
+        self.handcards = [x["name"] for x in cards[1:]]
+        context = self._get_context(numbers, cards)
 
-        board = self._get_board_state(state["units"])
+        board = self._get_board_state(units)
         emb = self.board_emb(board)
 
         return torch.cat((emb, context))
