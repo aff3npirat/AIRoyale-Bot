@@ -167,7 +167,7 @@ if __name__ == "__main__":
 
         units = bot.raw_state["units"]
 
-        torch.save(bot.raw_state)
+        torch.save(bot.raw_state, f"{OUTPUT}/detector_state_{count}.pt")
 
         # draw unit labels from unit detector
         image_ = image.copy()
@@ -256,7 +256,7 @@ if __name__ == "__main__":
             draw.rectangle(bbox, outline="green", width=2)
 
         conc_img.paste(image, (0, 0))
-        conc_img.save(f"./output/debug/debug_img_{count}.png")
+        conc_img.save(f"{OUTPUT}/img_{count}.png")
 
         image = bot.screen.take_screenshot()
         count += 1
