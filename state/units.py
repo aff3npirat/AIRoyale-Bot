@@ -109,7 +109,7 @@ class UnitDetector(OnnxDetector):
         sides = self.calculate_side(img, pred)
         labels = pred[:, 5]
 
-        return labels, pred[:4], sides
+        return labels, pred[:, :4], sides
 
 
 class SideDetector(OnnxDetector):

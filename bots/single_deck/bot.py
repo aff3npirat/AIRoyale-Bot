@@ -76,7 +76,7 @@ class SingleDeckBot(BotBase):
         return context
     
     def _get_board_state(self, units):
-        labels, bboxes, tile_y, team = units
+        labels, bboxes, team = units
         tile_x, tile_y = UnitDetector.box_to_tile(bboxes)
 
         labels = labels.astype(np.int32)
@@ -143,7 +143,7 @@ if __name__ == "__main__":
 
     from constants import TILE_WIDTH, TILE_HEIGHT, TOWER_HP_BOXES, ELIXIR_BOUNDING_BOX, CARD_CONFIG
 
-    OUTPUT = "./debug/single_deck_bot"
+    OUTPUT = "./output/debug/single_deck_bot"
     if not os.path.exists(OUTPUT):
         os.makedirs(OUTPUT)
 
