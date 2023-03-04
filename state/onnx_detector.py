@@ -62,7 +62,7 @@ class OnnxDetector:
 
             # score = object confidence * class confidence
             scores = x[:, 4:5] * x[:, 5:]
-            best_scores_idx = np.argmax(scores, axis=1).reshape(-1, 1)  # class labels with highest score
+            best_scores_idx = np.argmax(scores, axis=1, keepdims=True)  # class labels with highest score
             best_scores = np.take_along_axis(scores, best_scores_idx, axis=1)
 
             # Again, mask out predictions below the confidence threshold

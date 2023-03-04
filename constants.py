@@ -91,6 +91,7 @@ MULTI_HASH_INTERCEPT = 163
 UNIT_NAMES = [
     'archer',
     'arrows', 
+    'babydragon', 
     'cagegoblin', 
     'fireball', 
     'giant', 
@@ -103,12 +104,11 @@ UNIT_NAMES = [
     'minipekka', 
     'musketeer', 
     'prince', 
+    'skeleton'
     'speargoblin', 
+    'tombstone', 
     'valkyrie', 
     'wallbreaker', 
-    'babydragon', 
-    'tombstone', 
-    'skeleton'
 ]
 
 CARD_TO_UNITS = {
