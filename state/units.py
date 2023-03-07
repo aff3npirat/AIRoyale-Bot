@@ -123,8 +123,8 @@ class SideDetector(OnnxDetector):
 
     @staticmethod
     def preprocess(img):
-        img = img.resize((SIDE_H, SIDE_W), Image.BICUBIC)
-        img = np.array(img, dtype=np.float32)
+        img = img.resize((SIDE_H, SIDE_W), Image.Resampling.BICUBIC)
+        img = np.array(img, dtype=np.float32).transpose(2, 0, 1)
         img = np.expand_dims(img, axis=0)
         return img / 255
 
@@ -139,8 +139,7 @@ class SideDetector(OnnxDetector):
         """
         img = self.preprocess(img)
 
-        pred = self.sess.run([self.output_name], {self.input_name: img})[0]  # shape (1, 2)
-        team = np.argmax(pred)
+        team = self.sess.run([self.output_name], {self.input_name: img})[0][:, 0]  # shape (batch_size,)
 
         return team
         
