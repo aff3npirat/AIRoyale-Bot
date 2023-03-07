@@ -44,7 +44,7 @@ class UnitDetector(OnnxDetector):
     @staticmethod
     def preprocess(img):
         img = img.crop((0, UNIT_Y_START, img.width, UNIT_Y_END))
-        img = img.resize((UNIT_H, UNIT_W), Image.BICUBIC)
+        img = img.resize((UNIT_H, UNIT_W), Image.Resampling.BICUBIC)
         img = np.array(img, dtype=np.float32)
         img = img.transpose(2, 0, 1)
         img = np.expand_dims(img, axis=0)

@@ -79,7 +79,7 @@ class NumberDetector(OnnxDetector):
     @staticmethod
     def preprocess(image):
         # Resize the image
-        image = image.resize((NUMBER_WIDTH, NUMBER_HEIGHT), Image.BICUBIC)
+        image = image.resize((NUMBER_WIDTH, NUMBER_HEIGHT), Image.Resampling.BICUBIC)
 
         # Convert the image to grayscale
         image = np.array(image, dtype=np.float32)
