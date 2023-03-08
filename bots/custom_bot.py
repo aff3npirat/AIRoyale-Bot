@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 
 from screen import Screen
-from constants import SCREEN_CONFIGS, SCREEN_HASH_THRES, DATA_DIR
+from constants import SCREEN_CONFIGS, DATA_DIR
 
 
 
@@ -17,9 +17,14 @@ class BotBase:
         self.hash_size = hash_size
 
         with Image.open(os.path.join(DATA_DIR, "images/screens/in_game.png"), mode="r") as I:
-            ingame_hash = I.resize((hash_size, hash_size), Image.Resampling.BILINEAR).convert("L")
-            ingame_hash = np.array(ingame_hash).flatten()
-        self.screen_hashes["in_game"] = ingame_hash
+            self.screen_hashes["in_game"] = self._compute_image_hash(I)
+
+        self.screen_hashes["victory"] = np.load(os.path.join(DATA_DIR, "images/screens/victory_hash.npy"), allow_pickle=False)
+
+    def _compute_image_hash(self, image):
+        image_hash = image.resize((self.hash_size, self.hash_size), Image.Resampling.BILINEAR).convert("L")
+        image_hash = np.array(image_hash).flatten()
+        return image_hash
 
     def get_state(self, image):
         """
@@ -50,20 +55,23 @@ class BotBase:
         """
         Returns True when not in game.
         """
-        bbox = SCREEN_CONFIGS["in_game"]
-        actual_hash = image.crop(bbox).resize((self.hash_size, self.hash_size), Image.Resampling.BILINEAR).convert("L")
-        actual_hash = np.array(actual_hash).flatten()
+        bbox, thr = SCREEN_CONFIGS["in_game"]
+        actual_hash = self._compute_image_hash(image.crop(bbox))
 
         diff = np.mean(np.abs(self.screen_hashes["in_game"] - actual_hash))
 
-        return diff < SCREEN_HASH_THRES
+        return diff < thr
     
-    @staticmethod
-    def is_victory(image):
+    def is_victory(self, image):
         """
         Returns True if image is victory screen.
         """
-        raise NotImplementedError
+        bbox, thr = SCREEN_CONFIGS["victory"]
+        actual_hash = self._compute_image_hash(image.crop(bbox))
+
+        diff = np.mean(np.abs(self.screen_hashes["victory"] - actual_hash))
+
+        return diff < thr
     
     def run(self, auto_play):
         if auto_play:
