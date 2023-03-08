@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 
 from screen import Screen
-from constants import SCREEN_CONFIG, DATA_DIR
+from constants import SCREEN_CONFIG, DATA_DIR, CARD_HEIGHT, CARD_WIDTH, CARD_CONFIG
 
 
 
@@ -26,6 +26,15 @@ class BotBase:
         image_hash = image.resize((self.hash_size, self.hash_size), Image.Resampling.BILINEAR).convert("L")
         image_hash = np.array(image_hash).flatten()
         return image_hash
+    
+    @staticmethod
+    def slot_to_xy(slot):
+        x, y = CARD_CONFIG[slot+1][:2]
+        x = x + CARD_WIDTH/2
+        y = y + CARD_HEIGHT/2
+
+        return x, y
+
 
     def get_state(self, image):
         """

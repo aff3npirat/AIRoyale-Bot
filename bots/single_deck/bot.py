@@ -1,5 +1,3 @@
-import time
-
 import torch
 import numpy as np
 
@@ -29,8 +27,16 @@ class SingleDeckBot(BotBase):
     Can only see 8 different cards, that are all in his deck.
     """
 
-    def __init__(self, unit_model_path, number_model_path, side_model_path, deck_names, hash_size=8):
+    def __init__(self, side, unit_model_path, number_model_path, side_model_path, deck_names, hash_size=8):
         super().__init__(hash_size=hash_size)
+
+        tile_y = 21
+        if side == "right":
+            tile_x = 14
+        else:
+            tile_x = 3
+
+        self.place_pos = UnitDetector.tile_to_xy(tile_x, tile_y)
 
         self.unit_detector = UnitDetector(unit_model_path, side_model_path, deck_names)
         self.number_detector = NumberDetector(number_model_path)
@@ -146,12 +152,22 @@ class SingleDeckBot(BotBase):
         slot_idx = self.handcards.index(self.sorted_handcards[action]["name"])
         return slot_idx
     
+    def play_actions(self, actions):
+        if actions == -1:
+            return
+
+        x, y = self.slot_to_xy(actions)
+
+        self.screen.click(x, y)
+        self.screen.click(*self.place_pos)
+    
 
 
 if __name__ == "__main__":
     # debugging purposes
     import os
     import contextlib
+    import time
 
     from PIL import ImageDraw, ImageFont, Image
 
@@ -164,6 +180,7 @@ if __name__ == "__main__":
 
     deck_names = ["minions", "giant", "goblins", "musketeer", "minipekka", "knight", "archers", "arrows"]
     bot = SingleDeckBot(
+        "left",
         "./models/units_cpu.onnx",
         "./models/number_cpu.onnx",
         "./models/side_cpu.onnx",
@@ -177,7 +194,8 @@ if __name__ == "__main__":
     width, height = image.size
     while bot.in_game(image):
         state = bot.get_state(image)
-        action = bot.get_actions(state)
+        action = bot.get_actions(state, eps=1.0)
+        bot.play_actions(action)
 
         units = bot.unit_detector.run(image, conf_thres=0.35, iou_thres=0.45)
 

@@ -19,6 +19,9 @@ class Screen:
         """
         Click at the given (x, y) coordinate
         """
+        x = x / SCREENSHOT_WIDTH * self.width
+        y = y / SCREENSHOT_HEIGHT * self.height
+
         subprocess.run([self.adb_exec, '-s', 'localhost:5555', 'shell', 'input', 'tap', str(x), str(y)])
 
     def take_screenshot(self):
