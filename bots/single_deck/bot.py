@@ -168,6 +168,7 @@ if __name__ == "__main__":
     import os
     import contextlib
     import time
+    import logging
 
     from PIL import ImageDraw, ImageFont, Image
 
@@ -176,6 +177,13 @@ if __name__ == "__main__":
     OUTPUT = "./output/debug/single_deck_bot"
     if not os.path.exists(OUTPUT):
         os.makedirs(OUTPUT)
+
+    log_root = logging.getLogger()
+    formatter = logging.Formatter("%(message)s")
+    handler_file = logging.FileHandler(os.path.join(OUTPUT, "log.txt"), mode="w+")
+    handler_file.setFormatter(formatter)
+    log_root.addHandler(handler_file)
+    log_root.info("Initialized logging")
 
 
     deck_names = ["minions", "giant", "goblins", "musketeer", "minipekka", "knight", "archers", "arrows"]
@@ -197,7 +205,9 @@ if __name__ == "__main__":
         action = bot.get_actions(state, eps=1.0)
         bot.play_actions(action)
 
-        units = bot.unit_detector.run(image, conf_thres=0.35, iou_thres=0.45)
+        log_root.info(f"[{count}] action={action}, illegal_actions={bot.illegal_actions}, handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}")
+
+        units = bot.unit_detector.run(image)
 
         # draw unit labels from unit detector
         image_ = image.copy()
