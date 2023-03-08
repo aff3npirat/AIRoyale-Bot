@@ -3,7 +3,7 @@ DATA_DIR = "./data/"
 # game screens
 SCREEN_HASH_THRES = 20
 SCREEN_CONFIGS = {
-    "in_game": [95, 530, 350, 540],
+    "in_game": [67, 535, 75, 600],
 }
 
 # screenshot dimensions
