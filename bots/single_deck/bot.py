@@ -77,7 +77,14 @@ class SingleDeckBot(BotBase):
     
     def _get_board_state(self, units):
         labels, bboxes, team = units
-        tile_x, tile_y = UnitDetector.box_to_tile(bboxes)
+
+        x1 = bboxes[:, 0]
+        x2 = bboxes[:, 2]
+        y2 = bboxes[:, 3]
+
+        center_x = x1 + (x2 - x1)/2
+
+        tile_x, tile_y = UnitDetector.xy_to_tile(center_x, y2)
 
         labels = labels.astype(np.int32)
         tile_x = tile_x.astype(np.int32)
@@ -238,7 +245,7 @@ if __name__ == "__main__":
             color = "red"
             if c < 8:
                 color = "blue"
-            draw.ellipse([(x1, y1), (x2, y2)], outline=color, width=1)
+            draw.rectangle([x1, y1, x2, y2], outline=color, fill=color, width=1)
             
             # draw unit labels from state vector
             draw.text((x2, y1), deck_names[c%8], fill=color, font=font, anchor="lt")

@@ -13,6 +13,7 @@ from constants import (
     CARD_TO_UNITS,
     TILE_INIT_X,
     TILE_INIT_Y,
+    TILE_END_Y,
     TILE_WIDTH,
     TILE_HEIGHT,
     SCREENSHOT_HEIGHT,
@@ -66,23 +67,15 @@ class UnitDetector(OnnxDetector):
         return sides
     
     @staticmethod
-    def box_to_tile(bboxes):
-        x1 = bboxes[:, 0]
-        y1 = bboxes[:, 1]
-        x2 = bboxes[:, 2]
-        y2 = bboxes[:, 3]
+    def xy_to_tile(x, y):
+        """
+        Expects bboxes in absolute coordinates in screenshot.
+        """
+        x = np.clip(x, a_min=TILE_INIT_X, a_max=SCREENSHOT_WIDTH - TILE_INIT_X)
+        y = np.clip(y, a_min=TILE_INIT_Y, a_max=TILE_END_Y)
 
-        center_x = x1 + (x2 - x1)/2
-        center_y = y1 + (y2 - y1)/2
-
-        center_x *= SCREENSHOT_WIDTH
-        center_y *= SCREENSHOT_HEIGHT
-
-        center_x = np.clip(center_x, a_min=TILE_INIT_X, a_max=SCREENSHOT_WIDTH - TILE_INIT_X)
-        center_y = np.clip(center_x, a_min=TILE_INIT_Y, a_max=SCREENSHOT_HEIGHT - CARD_Y - TILE_INIT_Y)
-
-        tile_x = np.round((center_x - TILE_INIT_X) / TILE_WIDTH)
-        tile_y = np.round((center_y - TILE_INIT_Y) / TILE_HEIGHT)
+        tile_x = np.trunc((x - TILE_INIT_X) / TILE_WIDTH)
+        tile_y = np.trunc((y - TILE_INIT_Y) / TILE_HEIGHT)
 
         return tile_x, tile_y
     
