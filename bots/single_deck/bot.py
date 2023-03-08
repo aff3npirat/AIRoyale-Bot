@@ -232,11 +232,11 @@ if __name__ == "__main__":
             num = f"{hp_nums[i]:.2f}"
             _, (x1, y1, _, _) = TOWER_HP_BOXES[i]
 
-            draw.text((x1, y1-5), num, fill="black", font=font, anchor="lb")
+            draw.text((x1, y1-10), num, fill="black", font=font, anchor="lb")
 
         # draw elixir
         elixir = f"{context[ELIXIR]}"
-        draw.text((ELIXIR_BOUNDING_BOX[0]+10, ELIXIR_BOUNDING_BOX[1]), elixir, anchor="lb", font=font, fill="black")
+        draw.text((ELIXIR_BOUNDING_BOX[0]+20, ELIXIR_BOUNDING_BOX[1]), elixir, anchor="lb", font=font, fill="black")
 
         # draw next card
         next_card_id = context[NEXT_CARD_START:NEXT_CARD_END].nonzero(as_tuple=False)
@@ -319,4 +319,4 @@ if __name__ == "__main__":
 
         img = next(imgs)
 
-        img.save(os.path.join(OUTPUT, "debug_vision.gif"), format="GIF", append_images=imgs, save_all=True, duration=500)
+        img.save(os.path.join(OUTPUT, "debug_vision.gif"), format="GIF", append_images=imgs, save_all=True, duration=1000)
