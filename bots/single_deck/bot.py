@@ -126,7 +126,7 @@ class SingleDeckBot(BotBase):
         numbers = self.number_detector.run(image)
         cards = self.card_detector.run(image)
 
-        NumberDetector.relative_tower_hp(numbers)
+        NumberDetector.relative_tower_hp(numbers, king_level={"ally": 1, "enemy": 1})
 
         self.handcards = [x["name"] for x in cards[1:]]
         context = self._get_context(numbers, cards)
