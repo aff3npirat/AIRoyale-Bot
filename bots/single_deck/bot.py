@@ -98,7 +98,17 @@ class SingleDeckBot(BotBase):
 
             label = self.label_to_deck_id[label]
             channel_idx = team[i]*8 + label
-            board[channel_idx, tile_y[i], tile_x[i]] = 1.0
+            tx = tile_x[i]
+            ty = tile_y[i]
+            if board[channel_idx, ty, tx] == 1.0:
+                for x in [-1, 1]:
+                    for y in [-1, 1]:
+                        if board[channel_idx, ty+y, tx+x] == 0.0:
+                            tx += x
+                            ty += y
+                            break
+
+            board[channel_idx, ty, tx] = 1.0
 
         return board
 
