@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 
 from screen import Screen
-from constants import SCREEN_CONFIGS, DATA_DIR
+from constants import SCREEN_CONFIG, DATA_DIR
 
 
 
@@ -16,8 +16,9 @@ class BotBase:
         self.screen_hashes = {}
         self.hash_size = hash_size
 
-        with Image.open(os.path.join(DATA_DIR, "images/screens/in_game.png"), mode="r") as I:
-            self.screen_hashes["in_game"] = self._compute_image_hash(I)
+        for key in ["in_game", "game_end"]:
+            with Image.open(os.path.join(DATA_DIR, f"images/screens/{key}.png"), mode="r") as I:
+                self.screen_hashes[key] = self._compute_image_hash(I)
 
         self.screen_hashes["victory"] = np.load(os.path.join(DATA_DIR, "images/screens/victory_hash.npy"), allow_pickle=False)
 
@@ -45,14 +46,14 @@ class BotBase:
         raise NotImplementedError
     
     def detect_game_screen(self, image, screen_key):
-        bbox, thr = SCREEN_CONFIGS[screen_key]
+        bbox, thr = SCREEN_CONFIG[screen_key]
         actual_hash = self._compute_image_hash(image.crop(bbox))
 
         diff = np.mean(np.abs(self.screen_hashes[screen_key] - actual_hash))
 
         return diff < thr
     
-    def is_game_end_screen(self, image):
+    def is_game_end(self, image):
         """
         Returns True when on victory/loss screen.
         """

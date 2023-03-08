@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
     from PIL import ImageDraw, ImageFont, Image
 
-    from constants import TILE_WIDTH, TILE_HEIGHT, TOWER_HP_BOXES, ELIXIR_BOUNDING_BOX, CARD_CONFIG
+    from constants import TILE_WIDTH, TILE_HEIGHT, TOWER_HP_BOXES, ELIXIR_BOUNDING_BOX, CARD_CONFIG, SCREEN_CONFIG
 
     OUTPUT = "./output/debug/single_deck_bot"
     if not os.path.exists(OUTPUT):
@@ -171,7 +171,7 @@ if __name__ == "__main__":
     count = 0
     image = bot.screen.take_screenshot()
     width, height = image.size
-    while not bot.is_game_end(image):
+    while bot.in_game(image):
         state = bot.get_state(image)
         action = bot.get_actions(state)
 
@@ -269,6 +269,15 @@ if __name__ == "__main__":
         image = bot.screen.take_screenshot()
         count += 1
 
-    victory = bot.is_victory(image)
-    # TODO draw victory or loss on image
-    image.save(f"./output/debug/debug_img_{i}.png")
+    while bot.is_game_end(image):
+        image = bot.screen.take_screenshot()
+
+    victory = f"{'victory' if bot.is_victory(image) else 'loss'}"
+
+    draw = ImageDraw.Draw(image)
+    draw.text(SCREEN_CONFIG["victory"][:2], victory, fill="black", font=font, anchor="lb")
+
+    conc_img = Image.new("RGB", (width*2, height), color="black")
+    conc_img.paste(image, (0, 0))
+
+    image.save(f"./output/debug/img_{count}.png")

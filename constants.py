@@ -1,9 +1,10 @@
 DATA_DIR = "./data/"
 
 # game screens
-SCREEN_CONFIGS = {
+SCREEN_CONFIG = {
     "in_game": ((67, 535, 75, 600), 20),
     "victory": ((140, 260, 220, 270), 40),
+    "game_end": ((143, 558, 225, 588), 20),
 }
 
 # screenshot dimensions
