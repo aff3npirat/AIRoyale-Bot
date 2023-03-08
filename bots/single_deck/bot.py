@@ -180,9 +180,8 @@ if __name__ == "__main__":
         os.makedirs(OUTPUT)
 
     log_root = logging.getLogger()
-    formatter = logging.Formatter("%(message)s")
+    log_root.setLevel(logging.INFO)
     handler_file = logging.FileHandler(os.path.join(OUTPUT, "log.txt"), mode="w+")
-    handler_file.setFormatter(formatter)
     log_root.addHandler(handler_file)
     log_root.info("Initialized logging")
 
@@ -235,6 +234,8 @@ if __name__ == "__main__":
         context = state[EMB_SIZE:]
 
         draw = ImageDraw.Draw(image)
+
+        draw.text((width-50, 50), f"{count}", fill="black", font=font)
 
         # draw health
         ak, ar, al, ek, er, el = context[:HEALTH_END]
@@ -306,7 +307,7 @@ if __name__ == "__main__":
     while not bot.is_game_end(image):
         image = bot.screen.take_screenshot()
 
-    time.sleep(0.5)
+    time.sleep(2.0)
 
     victory = f"{'victory' if bot.is_victory(image) else 'loss'}"
     print(f"Detected outcome {victory}")
