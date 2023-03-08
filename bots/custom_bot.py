@@ -44,34 +44,31 @@ class BotBase:
         """
         raise NotImplementedError
     
-    @staticmethod
-    def detect_game_screen(image):
-        """
-        Detect what screen (in game, home, etc..) is visible.
-        """
-        raise NotImplementedError
+    def detect_game_screen(self, image, screen_key):
+        bbox, thr = SCREEN_CONFIGS[screen_key]
+        actual_hash = self._compute_image_hash(image.crop(bbox))
+
+        diff = np.mean(np.abs(self.screen_hashes[screen_key] - actual_hash))
+
+        return diff < thr
     
-    def is_game_end(self, image):
+    def is_game_end_screen(self, image):
+        """
+        Returns True when on victory/loss screen.
+        """
+        return self.detect_game_screen(image, "game_end")
+    
+    def in_game(self, image):
         """
         Returns True when not in game.
         """
-        bbox, thr = SCREEN_CONFIGS["in_game"]
-        actual_hash = self._compute_image_hash(image.crop(bbox))
-
-        diff = np.mean(np.abs(self.screen_hashes["in_game"] - actual_hash))
-
-        return diff < thr
+        return self.detect_game_screen(image, "in_game")
     
     def is_victory(self, image):
         """
         Returns True if image is victory screen.
         """
-        bbox, thr = SCREEN_CONFIGS["victory"]
-        actual_hash = self._compute_image_hash(image.crop(bbox))
-
-        diff = np.mean(np.abs(self.screen_hashes["victory"] - actual_hash))
-
-        return diff < thr
+        return self.detect_game_screen(image, "victory")
     
     def run(self, auto_play):
         if auto_play:
@@ -79,7 +76,7 @@ class BotBase:
             raise NotImplementedError
         
         image = self.screen.take_screenshot()
-        while not self.is_game_end(image):
+        while not self.in_game(image):
 
             state = self.get_state(image)
             actions = self.get_actions(state)
