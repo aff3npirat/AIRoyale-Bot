@@ -6,7 +6,7 @@ from state.units import UnitDetector
 from state.cards import BlueCardDetector
 from state.numbers import NumberDetector
 from bots.single_deck.nn import BoardEmbedding, DenseNet
-from constants import UNIT_NAMES, PRINCESS_HP, TILES_X, TILES_Y, CARD_TO_UNITS
+from constants import UNIT_NAMES, TILES_X, TILES_Y, CARD_TO_UNITS
 
 
 
