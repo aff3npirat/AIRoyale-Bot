@@ -1,3 +1,5 @@
+import time
+
 import torch
 import numpy as np
 
@@ -145,9 +147,11 @@ class SingleDeckBot(BotBase):
         return slot_idx
     
 
+
 if __name__ == "__main__":
     # debugging purposes
     import os
+    import contextlib
 
     from PIL import ImageDraw, ImageFont, Image
 
@@ -210,11 +214,11 @@ if __name__ == "__main__":
             num = f"{hp_nums[i]:.2f}"
             _, (x1, y1, _, _) = TOWER_HP_BOXES[i]
 
-            draw.text((x1, y1), num, fill="black", font=font, anchor="lb")
+            draw.text((x1, y1-5), num, fill="black", font=font, anchor="lb")
 
         # draw elixir
         elixir = f"{context[ELIXIR]}"
-        draw.text(ELIXIR_BOUNDING_BOX[:2], elixir, anchor="lb", font=font, fill="black")
+        draw.text((ELIXIR_BOUNDING_BOX[0]+10, ELIXIR_BOUNDING_BOX[1]), elixir, anchor="lb", font=font, fill="black")
 
         # draw next card
         next_card_id = context[NEXT_CARD_START:NEXT_CARD_END].nonzero(as_tuple=False)
@@ -269,15 +273,32 @@ if __name__ == "__main__":
         image = bot.screen.take_screenshot()
         count += 1
 
-    while bot.is_game_end(image):
+    print("Detected game end")
+    while not bot.is_game_end(image):
         image = bot.screen.take_screenshot()
 
+    time.sleep(0.5)
+
     victory = f"{'victory' if bot.is_victory(image) else 'loss'}"
+    print(f"Detected outcome {victory}")
 
     draw = ImageDraw.Draw(image)
-    draw.text(SCREEN_CONFIG["victory"][:2], victory, fill="black", font=font, anchor="lb")
+    draw.text(SCREEN_CONFIG["victory"][0][:2], victory, fill="black", font=font, anchor="lb")
 
     conc_img = Image.new("RGB", (width*2, height), color="black")
     conc_img.paste(image, (0, 0))
 
-    image.save(f"./output/debug/img_{count}.png")
+    conc_img.save(os.path.join(OUTPUT, f"img_{count}.png"))
+
+    # create a gif of all images
+    files = list(os.listdir(OUTPUT))
+    files = sorted(files, key=lambda x: int(x.split("_")[1][:-4]))
+
+    with contextlib.ExitStack() as stack:
+        imgs = (
+            stack.enter_context(Image.open(os.path.join(OUTPUT, f))) for f in files
+        )
+
+        img = next(imgs)
+
+        img.save(os.path.join(OUTPUT, "debug_vision.gif"), format="GIF", append_images=imgs, save_all=True, duration=500)
