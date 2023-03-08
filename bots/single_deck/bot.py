@@ -27,8 +27,8 @@ class SingleDeckBot(BotBase):
     Can only see 8 different cards, that are all in his deck.
     """
 
-    def __init__(self, unit_model_path, number_model_path, side_model_path, deck_names):
-        super().__init__()
+    def __init__(self, unit_model_path, number_model_path, side_model_path, deck_names, hash_size=8):
+        super().__init__(hash_size=hash_size)
 
         self.unit_detector = UnitDetector(unit_model_path, side_model_path, deck_names)
         self.number_detector = NumberDetector(number_model_path)
@@ -143,11 +143,6 @@ class SingleDeckBot(BotBase):
         action -= 1
         slot_idx = self.handcards.index(self.sorted_handcards[action]["name"])
         return slot_idx
-    
-    @staticmethod
-    def is_game_end(image):
-        # TODO
-        return False
     
 
 if __name__ == "__main__":
