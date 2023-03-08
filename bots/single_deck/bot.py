@@ -170,6 +170,7 @@ if __name__ == "__main__":
     import time
     import logging
 
+    import cv2
     from PIL import ImageDraw, ImageFont, Image
 
     from constants import TILE_WIDTH, TILE_HEIGHT, TOWER_HP_BOXES, ELIXIR_BOUNDING_BOX, CARD_CONFIG, SCREEN_CONFIG
@@ -320,13 +321,11 @@ if __name__ == "__main__":
 
     # create a gif of all images
     files = list(os.listdir(OUTPUT))
-    files = sorted(files, key=lambda x: int(x.split("_")[1][:-4]))
+    files = sorted(filter(lambda x: ".png" in x, files), key=lambda x: int(x.split("_")[1][:-4]))
 
-    with contextlib.ExitStack() as stack:
-        imgs = (
-            stack.enter_context(Image.open(os.path.join(OUTPUT, f))) for f in files
-        )
-
-        img = next(imgs)
-
-        img.save(os.path.join(OUTPUT, "debug_vision.gif"), format="GIF", append_images=imgs, save_all=True, duration=1000)
+    video = cv2.VideoWriter(os.path.join(OUTPUT, "debug_vision.avi"), 0, 1, (width*2, height))
+    for file in files:
+        img = cv2.imread(os.path.join(OUTPUT, file))
+        video.write(img)
+    
+    video.release()
