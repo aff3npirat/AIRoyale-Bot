@@ -32,8 +32,8 @@ class NumberDetector(OnnxDetector):
 
     @staticmethod
     def _calculate_confidence_and_number(pred):
-        pred = pred.tolist()[:4]  # only take 4 best predictions
-        pred.sort(key=lambda x: x[0])
+        pred = pred[np.argsort(pred[:, 4], axis=0)][-4:]
+        pred = pred[np.argsort(pred[:, 0], axis=0)]
 
         confidence = [p[4] for p in pred]
         number = ''.join([str(int(p[5])) for p in pred])
@@ -59,15 +59,15 @@ class NumberDetector(OnnxDetector):
         image = image.convert("L")
         image = image.resize((NUMBER_WIDTH, NUMBER_HEIGHT), Image.Resampling.BICUBIC)
 
-        image = np.array(image)
-        image[image>=170] = 255
-        image[image<170] = 0
+        image = np.array(image, dtype=np.float32)
+        image[image>=170] = 1.0
+        image[image<170] = 0.0
         image = np.expand_dims(image, axis=0)
         image = np.concatenate((image, image, image), axis=0)
 
         return image
     
-    def run(self, image, conf_thres=0.85, iou_thres=0.45):
+    def run(self, image, conf_thres=0.8, iou_thres=0.45):
         # Preprocessing
         crops = np.empty((len(TOWER_HP_BOXES), 3, NUMBER_HEIGHT, NUMBER_WIDTH), dtype=np.float32)
         for i, (_, bounding_box) in enumerate(TOWER_HP_BOXES):
@@ -78,7 +78,7 @@ class NumberDetector(OnnxDetector):
         pred = self.sess.run([self.output_name], {self.input_name: crops})[0]
 
         # Forced post-processing
-        pred = self.nms(pred, conf_thres=conf_thres, iou_thres=iou_thres)
+        pred = self.nms(pred, conf_thres=conf_thres, iou_thres=iou_thres, max_wh=64)
 
         # Custom post-processing
         pred = self.post_process(pred, TOWER_HP_BOXES)

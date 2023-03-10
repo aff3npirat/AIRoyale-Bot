@@ -23,8 +23,8 @@ class OnnxDetector:
         xyxy = boxes.copy()
         xyxy[..., 0] = boxes[..., 0] - boxes[..., 2]/2
         xyxy[..., 1] = boxes[..., 1] - boxes[..., 3]/2
-        xyxy[..., 2] = boxes[..., 2] + boxes[..., 2]/2
-        xyxy[..., 3] = boxes[..., 3] + boxes[..., 3]/2
+        xyxy[..., 2] = boxes[..., 0] + boxes[..., 2]/2
+        xyxy[..., 3] = boxes[..., 1] + boxes[..., 3]/2
 
         return xyxy
 
