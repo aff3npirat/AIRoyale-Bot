@@ -239,8 +239,8 @@ if __name__ == "__main__":
 
         # draw health
         for i in range(6):
-            num = f"{numbers[i]['number']}"
-            _, (x1, y1, _, _) = TOWER_HP_BOXES[i]
+            name, (x1, y1, _, _) = TOWER_HP_BOXES[i]
+            num = f"{numbers[name]['number']}"
 
             draw.text((x1, y1-10), num, fill="black", font=font, anchor="lb")
 
