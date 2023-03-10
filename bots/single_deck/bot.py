@@ -123,7 +123,7 @@ class SingleDeckBot(BotBase):
     @torch.no_grad()
     def get_state(self, image):
         units = self.unit_detector.run(image)  # label, tile, side
-        numbers = self.number_detector.run(image, conf_thres=0.8, iou_thres=0.45)
+        numbers = self.number_detector.run(image)
         cards = self.card_detector.run(image)
 
         NumberDetector.relative_tower_hp(numbers, king_level={"ally": 1, "enemy": 1})
@@ -207,6 +207,7 @@ if __name__ == "__main__":
         log_root.info(f"[{count}] action={action}, illegal_actions={bot.illegal_actions}, handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}")
 
         units = bot.unit_detector.run(image)
+        numbers = bot.number_detector.run(image)
 
         # draw unit labels from unit detector
         image_ = image.copy()
@@ -237,10 +238,8 @@ if __name__ == "__main__":
         draw.text((width-50, 50), f"{count}", fill="black", font=font)
 
         # draw health
-        ak, ar, al, ek, er, el = context[:HEALTH_END]
-        hp_nums = [ek, ak, ar, al, er, el]
         for i in range(6):
-            num = f"{hp_nums[i]:.2f}"
+            num = f"{numbers[i]['number']}"
             _, (x1, y1, _, _) = TOWER_HP_BOXES[i]
 
             draw.text((x1, y1-10), num, fill="black", font=font, anchor="lb")
