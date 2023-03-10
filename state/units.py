@@ -96,7 +96,7 @@ class UnitDetector(OnnxDetector):
         img_transform = self.preprocess(img)
         pred = self.sess.run([self.output_name], {self.input_name: img_transform})[0]  # returns absolute coords
 
-        pred = self.nms(pred, conf_thres=conf_thres, iou_thres=iou_thres)[0]  # shape (M, 6)
+        pred = self.nms(pred, conf_thres=conf_thres, iou_thres=iou_thres)[0]  # shape (num_boxes, 6)
 
         # get absolute coords in unprocessed image
         pred[:, [0, 2]] *= SCREENSHOT_WIDTH / UNIT_W

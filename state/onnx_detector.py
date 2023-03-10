@@ -75,6 +75,10 @@ class OnnxDetector:
             boxes, scores = x[:, :4] + c, x[:, 4]  # boxes (offset by class), scores
             i = torchvision.ops.nms(torch.tensor(boxes), torch.tensor(scores), iou_thres)  # NMS
 
-            output[xi] = x[i]
+            x_select = x[i]
+            if len(x_select.shape) == 1:
+                x_select = np.expand_dims(x_select, 0)
+
+            output[xi] = x_select
 
         return output
