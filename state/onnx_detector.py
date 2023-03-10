@@ -1,4 +1,6 @@
 import onnxruntime
+import torch
+import torchvision
 import numpy as np
 
 
@@ -17,32 +19,6 @@ class OnnxDetector:
         self.output_name = self.sess.get_outputs()[0].name
 
     @staticmethod
-    def iou_nms(boxes, scores, iou_thres):
-        x1, y1, x2, y2 = boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3]
-
-        areas = (x2 - x1 + 1) * (y2 - y1 + 1)
-        order = scores.argsort()[::-1]  # get boxes with more ious first
-
-        keep = []
-        while order.size > 0:
-            i = order[0]  # pick maximum iou box
-            keep.append(i)
-            xx1 = np.maximum(x1[i], x1[order[1:]])
-            yy1 = np.maximum(y1[i], y1[order[1:]])
-            xx2 = np.minimum(x2[i], x2[order[1:]])
-            yy2 = np.minimum(y2[i], y2[order[1:]])
-
-            w = np.maximum(0.0, xx2 - xx1 + 1)  # maximum width
-            h = np.maximum(0.0, yy2 - yy1 + 1)  # maximum height
-            inter = w * h
-            ovr = inter / (areas[i] + areas[order[1:]] - inter)
-
-            inds = np.where(ovr <= iou_thres)[0]
-            order = order[inds + 1]
-
-        return keep
-
-    @staticmethod
     def _xywh_to_xyxy(boxes):
         boxes[:, 0] -= boxes[:, 2] / 2
         boxes[:, 1] -= boxes[:, 3] / 2
@@ -50,35 +26,52 @@ class OnnxDetector:
         boxes[:, 3] += boxes[:, 1]
 
     @staticmethod
-    def nms(prediction, conf_thres=0.725, iou_thres=0.5):
-        output = [np.zeros((0, 6))] * len(prediction)
-        for i in range(len(prediction)):
-            # Mask out predictions below the confidence threshold
-            mask = prediction[i, :, 4] > conf_thres
-            x = prediction[i][mask]
+    def nms(prediction, conf_thres=0.25, iou_thres=0.45, max_wh=1.0):
+        """
+        Non-Maximum Suppression (NMS) on inference results to reject overlapping detections
+        
+        Returns:
+            list of detections, on (n,6) tensor per image [xyxy, conf, cls]
+        """
+        bs = prediction.shape[0]  # batch size
+        nc = prediction.shape[2] - 5  # number of classes
+        xc = prediction[..., 4] > conf_thres  # candidates
 
+        # Settings
+        mi = 5 + nc  # mask start index
+        output = [np.zeros((0, 6))] * bs
+        for xi, x in enumerate(prediction):  # image index, image inference
+            x = x[xc[xi]]  # confidence
+
+            # If none remain process next image
             if not x.shape[0]:
                 continue
 
-            # score = object confidence * class confidence
-            scores = x[:, 4:5] * x[:, 5:]
-            best_scores_idx = np.argmax(scores, axis=1, keepdims=True)  # class labels with highest score
-            best_scores = np.take_along_axis(scores, best_scores_idx, axis=1)
+            # Compute conf
+            x[:, 5:] *= x[:, 4:5]  # conf = obj_conf * cls_conf
 
-            # Again, mask out predictions below the confidence threshold
-            mask = np.ravel(best_scores > conf_thres)
-            best_scores = best_scores[mask]
-            best_scores_idx = best_scores_idx[mask]
+            # Box/Mask
+            box = OnnxDetector._xywh_to_xyxy(x[:, :4])  # center_x, center_y, width, height) to (x1, y1, x2, y2)
 
-            # Convert the xywh of each box to xyxy inplace
-            boxes = x[mask, :4]
-            OnnxDetector._xywh_to_xyxy(boxes)
+            conf = x[:, 5:mi].max(1, keepdims=True)  # conf
+            j = x[:, 5:mi].argmax(1, keepdims=True)  # class labels
+            x = np.concatenate((box, conf, j.view(np.float)), 1)[conf.reshape(-1) > conf_thres]
 
-            # Work out which boxes to keep
-            keep = OnnxDetector.iou_nms(boxes, np.ravel(best_scores), iou_thres)
 
-            # Keep only the best class
-            best = np.hstack([boxes[keep], best_scores[keep], best_scores_idx[keep]])
+            # Check shape
+            n = x.shape[0]  # number of boxes
+            if not n:  # no boxes
+                continue
+            x = x[x[:, 4].argsort()[::-1]]  # sort by confidence
 
-            output[i] = best  # bbox, score, label
+            # Batched NMS
+            c = x[:, 5:6] * max_wh  # classes
+
+            # box coordinates are normed to intervall [0, 1], by offsetting with class labels (0, 1, 2,...)
+            # no boxes overlap that do not belong to the same class
+            boxes, scores = x[:, :4] + c, x[:, 4]  # boxes (offset by class), scores
+            i = torchvision.ops.nms(torch.tensor(boxes), torch.tensor(scores), iou_thres)  # NMS
+
+            output[xi] = x[i]
+
         return output
