@@ -56,26 +56,20 @@ class NumberDetector(OnnxDetector):
     @staticmethod
     def preprocess(image):
         # Resize the image
+        image = image.convert("L")
         image = image.resize((NUMBER_WIDTH, NUMBER_HEIGHT), Image.Resampling.BICUBIC)
 
-        # Convert the image to grayscale
-        image = np.array(image, dtype=np.float32)
-        gray = np.dot(image[:, :, :3], [0.2125, 0.7154, 0.0721])
-        for i in range(3):
-            image[:, :, i] = gray
+        image = np.array(image)
+        image[image>=170] = 255
+        image[image<170] = 0
+        image = np.expand_dims(image, axis=0)
+        image = np.concatenate((image, image, image), axis=0)
 
-        # Add padding
-        padded_image = 114 * np.ones((NUMBER_WIDTH, NUMBER_WIDTH, 3), dtype=np.float32)
-        top = (NUMBER_WIDTH - NUMBER_HEIGHT) // 2
-        padded_image[top: top + NUMBER_HEIGHT, :, :] = image
-
-        padded_image = padded_image / 255
-        padded_image = np.expand_dims(padded_image.transpose(2, 0, 1), axis=0)
-        return padded_image
+        return image
     
     def run(self, image, conf_thres=0.25, iou_thres=0.45):
         # Preprocessing
-        crops = np.empty((len(TOWER_HP_BOXES), 3, NUMBER_WIDTH, NUMBER_WIDTH), dtype=np.float32)
+        crops = np.empty((len(TOWER_HP_BOXES), 3, NUMBER_HEIGHT, NUMBER_WIDTH), dtype=np.float32)
         for i, (_, bounding_box) in enumerate(TOWER_HP_BOXES):
             crop = image.crop(bounding_box)
             crops[i] = self.preprocess(crop)

@@ -166,7 +166,6 @@ class SingleDeckBot(BotBase):
 if __name__ == "__main__":
     # debugging purposes
     import os
-    import contextlib
     import time
     import logging
 
