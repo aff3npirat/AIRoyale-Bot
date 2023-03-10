@@ -20,13 +20,16 @@ class OnnxDetector:
 
     @staticmethod
     def _xywh_to_xyxy(boxes):
-        boxes[:, 0] -= boxes[:, 2] / 2
-        boxes[:, 1] -= boxes[:, 3] / 2
-        boxes[:, 2] += boxes[:, 0]
-        boxes[:, 3] += boxes[:, 1]
+        xyxy = boxes.copy()
+        xyxy[..., 0] = boxes[..., 0] - boxes[..., 2]/2
+        xyxy[..., 1] = boxes[..., 1] - boxes[..., 3]/2
+        xyxy[..., 2] = boxes[..., 2] + boxes[..., 2]/2
+        xyxy[..., 3] = boxes[..., 3] + boxes[..., 3]/2
+
+        return xyxy
 
     @staticmethod
-    def nms(prediction, conf_thres=0.25, iou_thres=0.45, max_wh=1.0):
+    def nms(prediction, conf_thres=0.25, iou_thres=0.45, max_wh=7800):
         """
         Non-Maximum Suppression (NMS) on inference results to reject overlapping detections
         
@@ -55,7 +58,7 @@ class OnnxDetector:
 
             conf = x[:, 5:mi].max(1, keepdims=True)  # conf
             j = x[:, 5:mi].argmax(1, keepdims=True)  # class labels
-            x = np.concatenate((box, conf, j.view(np.float)), 1)[conf.reshape(-1) > conf_thres]
+            x = np.concatenate((box, conf, j.astype(np.float)), 1)[conf.reshape(-1) > conf_thres]
 
 
             # Check shape

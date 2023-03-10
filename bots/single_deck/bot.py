@@ -187,11 +187,11 @@ if __name__ == "__main__":
 
     deck_names = ["minions", "giant", "goblins", "musketeer", "minipekka", "knight", "archers", "arrows"]
     bot = SingleDeckBot(
-        "left",
-        "./models/units_cpu.onnx",
-        "./models/number_cpu.onnx",
-        "./models/side_cpu.onnx",
-        deck_names,
+        side="left",
+        unit_model_path="./models/units_cpu.onnx",
+        number_model_path="./models/number_cpu.onnx",
+        side_model_path="./models/side_cpu.onnx",
+        deck_names=deck_names,
     )
 
     font = ImageFont.load_default()
