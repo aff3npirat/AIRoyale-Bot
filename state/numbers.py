@@ -60,8 +60,9 @@ class NumberDetector(OnnxDetector):
         image = image.resize((NUMBER_WIDTH, NUMBER_HEIGHT), Image.Resampling.BICUBIC)
 
         image = np.array(image, dtype=np.float32)
-        image[image>=170] = 1.0
-        image[image<170] = 0.0
+        background_mask = (image<170)
+        image[~background_mask] = 1.0
+        image[background_mask] = 0.0
         image = np.expand_dims(image, axis=0)
         image = np.concatenate((image, image, image), axis=0)
 

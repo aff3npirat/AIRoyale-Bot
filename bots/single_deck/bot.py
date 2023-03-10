@@ -123,7 +123,7 @@ class SingleDeckBot(BotBase):
     @torch.no_grad()
     def get_state(self, image):
         units = self.unit_detector.run(image)  # label, tile, side
-        numbers = self.number_detector.run(image)
+        numbers = self.number_detector.run(image, conf_thres=0.8, iou_thres=0.45)
         cards = self.card_detector.run(image)
 
         NumberDetector.relative_tower_hp(numbers, king_level={"ally": 1, "enemy": 1})
