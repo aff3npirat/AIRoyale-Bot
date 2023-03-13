@@ -68,7 +68,7 @@ class NumberDetector(OnnxDetector):
 
         return image
     
-    def run(self, image, conf_thres=0.8, iou_thres=0.45):
+    def run(self, image, conf_thres=0.725, iou_thres=0.45):
         # Preprocessing
         crops = np.empty((len(TOWER_HP_BOXES), 3, NUMBER_HEIGHT, NUMBER_WIDTH), dtype=np.float32)
         for i, (_, bounding_box) in enumerate(TOWER_HP_BOXES):
