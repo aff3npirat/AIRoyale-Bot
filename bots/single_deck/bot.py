@@ -6,7 +6,7 @@ from state.units import UnitDetector
 from state.cards import BlueCardDetector
 from state.numbers import NumberDetector
 from bots.single_deck.nn import BoardEmbedding, DenseNet
-from constants import UNIT_NAMES, TILES_X, TILES_Y, CARD_TO_UNITS
+from constants import UNIT_NAMES, TILES_X, TILES_Y, CARD_TO_UNITS, KING_HP, PRINCESS_HP
 
 
 
@@ -27,7 +27,7 @@ class SingleDeckBot(BotBase):
     Can only see 8 different cards, that are all in his deck.
     """
 
-    def __init__(self, side, unit_model_path, number_model_path, side_model_path, deck_names, hash_size=8):
+    def __init__(self, side, unit_model_path, number_model_path, side_model_path, deck_names, hash_size=8, king_levels=None):
         super().__init__(hash_size=hash_size)
 
         tile_y = 22
@@ -51,25 +51,27 @@ class SingleDeckBot(BotBase):
             label_to_deck_id[UNIT_NAMES.index(name)] = i
         self.label_to_deck_id = label_to_deck_id
 
-        self.princess_damaged = {"right": False, "left": False}
+        self.towers_destroyed = {k: False for k in ["enemy_king_hp", "ally_king_hp", "right_ally_princess_hp", "left_ally_princess_hp",  "right_enemy_princess_hp", "left_enemy_princess_hp"]}
+        self.towers_unhit = {k: True for k in self.towers_destroyed}
+        self.king_levels = king_levels if king_levels is not None else {"ally": 1, "enemy": 1}
 
     def _get_context(self, numbers, cards):
         context = torch.zeros((NEXT_CARD_END), dtype=torch.float32)  # turret health, elixir, handcards, handcards ready, next handcard
 
-        for i, team in enumerate(["ally", "enemy"]):
-            context[i*3] = numbers[f"{team}_king_hp"]["number"]
-            for j, side in enumerate(["right", "left"]):
-                hp = numbers[f"{side}_{team}_princess_hp"]["number"]
-                if team == "ally" and hp < 0 and not self.princess_damaged[side]:
-                    hp = 1.0
-                elif team == "ally" and hp >= 0 and not self.princess_damaged[side]:
-                    self.princess_damaged[side] = True
+        for i, name in enumerate(self.towers_destroyed):
+            if self.towers_destroyed[name]:
+                hp = 0.0
+            elif self.towers_unhit[name]:
+                hp = 1.0
+            else:
+                hp = numbers[name]["number"]
 
-                context[i*3 + j + 1] = hp if hp >= 0 else 0.0
+            context[i] = hp
+
 
         context[ELIXIR] = numbers["elixir"]["number"]
 
-        
+
         handcards = sorted(filter(lambda x: x["deck_id"] >= 0, cards[1:]), key=lambda x: x["deck_id"])
         self.sorted_handcards = handcards
         for i in range(len(handcards)):
@@ -129,7 +131,17 @@ class SingleDeckBot(BotBase):
         for i in range(4):
             cards[i+1]["ready"] = (cards[i+1]["cost"]<=elixir)
 
-        NumberDetector.relative_tower_hp(numbers, king_level={"ally": 1, "enemy": 1})
+        if numbers["enemy_king_hp"]["number"] == 1 and self.towers_unhit["enemy_king_hp"]:
+            numbers["enemy_king_hp"]["number"] = -1
+
+        for name in self.towers_destroyed:
+            num = numbers[name]["number"]
+            if num >= 0.0 and self.towers_unhit:
+                self.towers_unhit[name] = False
+            elif num < 0 and not self.towers_unhit:
+                self.towers_destroyed[name] = True
+
+        NumberDetector.relative_tower_hp(numbers, king_level=self.king_levels)
 
         self.handcards = [x["name"] for x in cards[1:]]
         context = self._get_context(numbers, cards)
@@ -229,6 +241,13 @@ if __name__ == "__main__":
             draw_.rectangle((x1, y1, x2, y2), outline=color, width=2)
             draw_.text((x1, y1), name, fill=color, font=font, anchor="lb")
 
+        # draw health
+        for i in range(6):
+            name, (x1, y1, _, _) = TOWER_HP_BOXES[i]
+            num = f"{numbers[name]['number']}"
+
+            draw_.text((x1, y1-10), num, fill="black", font=font, anchor="lb")
+
         # final image will contain bot view and unit detector view
         conc_img = Image.new("RGB", (width*2, height))
         conc_img.paste(image_, (width, 0))
@@ -245,9 +264,10 @@ if __name__ == "__main__":
         draw.text((width-50, 50), f"{count}", fill="black", font=font)
 
         # draw health
+        nums = context[:6]
         for i in range(6):
             name, (x1, y1, _, _) = TOWER_HP_BOXES[i]
-            num = f"{numbers[name]['number']}"
+            num = f"{nums[i]:.2f}"
 
             draw.text((x1, y1-10), num, fill="black", font=font, anchor="lb")
 
@@ -308,6 +328,8 @@ if __name__ == "__main__":
         image = bot.screen.take_screenshot()
         count += 1
 
+    image.save(os.path.join(OUTPUT, "img_-1_game_end.png"))
+
     print("Detected game end")
     while not bot.is_game_end(image):
         image = bot.screen.take_screenshot()
@@ -327,7 +349,7 @@ if __name__ == "__main__":
 
     # create a gif of all images
     files = list(os.listdir(OUTPUT))
-    files = sorted(filter(lambda x: ".png" in x, files), key=lambda x: int(x.split("_")[1][:-4]))
+    files = sorted(filter(lambda x: (".png" in x and x.split("_")[1][:-4] != "-1"), files), key=lambda x: int(x.split("_")[1][:-4]))
 
     video = cv2.VideoWriter(os.path.join(OUTPUT, "debug_vision.avi"), 0, 1, (width*2, height))
     for file in files:

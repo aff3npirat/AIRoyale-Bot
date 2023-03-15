@@ -52,7 +52,7 @@ class NumberDetector(OnnxDetector):
             clean_pred[name] = {'bounding_box': bounding_box,
                                 'confidence': confidence,
                                 'number': number}
-
+            
         return clean_pred
     
     @staticmethod
