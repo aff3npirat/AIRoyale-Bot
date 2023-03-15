@@ -65,7 +65,6 @@ class NumberDetector(OnnxDetector):
         background_mask = (image<170)
         image[~background_mask] = 1.0
         image[background_mask] = 0.0
-        image = np.expand_dims(image, axis=0)
         image = np.concatenate((image, image, image), axis=0)
 
         return image
