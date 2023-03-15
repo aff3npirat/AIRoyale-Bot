@@ -12,7 +12,6 @@ class BlueCardDetector:
     def __init__(self, card_names, hash_size=8, gray_std_threshold=5):
         self.card_names = card_names
         self.hash_size = hash_size
-        self.gray_std_threshold = gray_std_threshold
 
         self.cards, self.card_hashes = self._calculate_cards_and_card_hashes()
 
@@ -50,14 +49,14 @@ class BlueCardDetector:
         i = 0
         with open(f'{DATA_DIR}/cards.csv') as f:
             for line in f:
-                name, _, cost, type_, target, _ = line.strip().replace('"', '').split(',')
+                name, _, cost, _, _, _ = line.strip().replace('"', '').split(',')
                 if name in self.card_names:
                     path = os.path.join(DATA_DIR, 'images', 'cards', f'{name}.png')
                     card = Image.open(path)
                     multi_hash = self._calculate_multi_hash(card)
                     card_hashes[i] = np.tile(np.expand_dims(multi_hash, axis=2), (1, 1, HAND_SIZE))
                     deck_id = self.card_names.index(name)
-                    cards.append({'name': name, 'cost': int(cost), 'type': type_, 'target': target, "deck_id": deck_id})
+                    cards.append({'name': name, 'cost': int(cost), "deck_id": deck_id})
                     i += 1
 
         # Add the blank card
@@ -65,7 +64,7 @@ class BlueCardDetector:
         card = Image.open(path)
         multi_hash = self._calculate_multi_hash(card)
         card_hashes[-1] = np.tile(np.expand_dims(multi_hash, axis=2), (1, 1, HAND_SIZE))
-        cards.append({'name': 'blank', 'cost': -1, 'type': 'n/a', 'target': 'n/a', "deck_id": -1})
+        cards.append({'name': 'blank', 'cost': 999, "deck_id": -1})
 
         return cards, card_hashes
 
@@ -84,18 +83,7 @@ class BlueCardDetector:
 
         return cards, crops
 
-    def _detect_if_ready(self, cards, crops):
-        """
-        Detect if the cards are ready
-        Use the mean standard deviation of each pixel
-        """
-        for card, crop in zip(cards, crops):
-            std = np.mean(np.std(np.array(crop), axis=2))
-            card['ready'] = std > self.gray_std_threshold
-        return cards
-
     def run(self, image):
         cards, crops = self._detect_cards(image)
-        cards = self._detect_if_ready(cards, crops)
 
         return cards

@@ -125,6 +125,10 @@ class SingleDeckBot(BotBase):
         numbers = self.number_detector.run(image)
         cards = self.card_detector.run(image)
 
+        elixir = numbers["elixir"]["number"]
+        for i in range(4):
+            cards[i+1]["ready"] = (cards[i+1]["cost"]<=elixir)
+
         NumberDetector.relative_tower_hp(numbers, king_level={"ally": 1, "enemy": 1})
 
         self.handcards = [x["name"] for x in cards[1:]]
