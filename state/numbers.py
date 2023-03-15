@@ -65,11 +65,12 @@ class NumberDetector(OnnxDetector):
         background_mask = (image<170)
         image[~background_mask] = 1.0
         image[background_mask] = 0.0
+        image = np.expand_dims(image, axis=0)
         image = np.concatenate((image, image, image), axis=0)
 
         return image
     
-    def run(self, image, conf_thres=0.725, iou_thres=0.45):
+    def run(self, image, conf_thres=0.71, iou_thres=0.45):
         # Preprocessing
         crops = np.empty((len(TOWER_HP_BOXES), 3, NUMBER_HEIGHT, NUMBER_WIDTH), dtype=np.float32)
         for i, (_, bounding_box) in enumerate(TOWER_HP_BOXES):

@@ -30,7 +30,7 @@ class SingleDeckBot(BotBase):
     def __init__(self, side, unit_model_path, number_model_path, side_model_path, deck_names, hash_size=8):
         super().__init__(hash_size=hash_size)
 
-        tile_y = 27
+        tile_y = 22
         if side == "right":
             tile_x = 14
         else:
