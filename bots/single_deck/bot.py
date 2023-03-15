@@ -172,7 +172,7 @@ if __name__ == "__main__":
     import cv2
     from PIL import ImageDraw, ImageFont, Image
 
-    from constants import TILE_WIDTH, TILE_HEIGHT, TOWER_HP_BOXES, ELIXIR_BOUNDING_BOX, CARD_CONFIG, SCREEN_CONFIG
+    from constants import TILE_WIDTH, TILE_HEIGHT, TOWER_HP_BOXES, CARD_CONFIG, SCREEN_CONFIG
 
     OUTPUT = "./output/debug/single_deck_bot"
     if not os.path.exists(OUTPUT):
@@ -246,7 +246,7 @@ if __name__ == "__main__":
 
         # draw elixir
         elixir = f"{context[ELIXIR]}"
-        draw.text((ELIXIR_BOUNDING_BOX[0]+20, ELIXIR_BOUNDING_BOX[1]), elixir, anchor="lb", font=font, fill="black")
+        draw.text((120, 628), elixir, anchor="lb", font=font, fill="black")
 
         # draw next card
         next_card_id = context[NEXT_CARD_START:NEXT_CARD_END].nonzero(as_tuple=False)

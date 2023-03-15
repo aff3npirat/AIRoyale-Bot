@@ -1,24 +1,26 @@
 import numpy as np
 from PIL import Image
 
-from constants import ELIXIR_BOUNDING_BOX, NUMBER_WIDTH, NUMBER_HEIGHT, TOWER_HP_BOXES, KING_HP, PRINCESS_HP
+from constants import NUMBER_WIDTH, NUMBER_HEIGHT, TOWER_HP_BOXES, KING_HP, PRINCESS_HP, ELIXIR_RED_THR, ELIXIR_DELTA_X, ELIXIR_X, ELIXIR_Y
 from state.onnx_detector import OnnxDetector
 
+
+
+ELIXIR_POINTS = [i*ELIXIR_DELTA_X for i in range(10)]
+ELIXIR_BBOX = (ELIXIR_X, ELIXIR_Y, ELIXIR_X + 9*ELIXIR_DELTA_X + 1, ELIXIR_Y + 1)
 
 
 class NumberDetector(OnnxDetector):
 
     @staticmethod
     def calculate_elixir(image):
-            crop = image.crop(ELIXIR_BOUNDING_BOX)
-            std = np.array(crop).std(axis=(0, 2))
-            rolling_std = np.convolve(std, np.ones(10) / 10, mode='valid')
-            change_points = np.nonzero(rolling_std < 50)[0]
-            if len(change_points) == 0:
-                elixir = 10
-            else:
-                elixir = (change_points[0] + 10) // 25
-            return elixir
+        vals = np.array(image.crop(ELIXIR_BBOX))[0, ELIXIR_POINTS, 0]  # only interested in red channel
+        m = (vals>ELIXIR_RED_THR)
+
+        elixir = 10
+        if not m.all():
+            elixir = np.argmin(m)
+        return elixir
     
     @staticmethod
     def relative_tower_hp(pred, king_level):
@@ -85,8 +87,7 @@ class NumberDetector(OnnxDetector):
         pred = self.post_process(pred, TOWER_HP_BOXES)
 
         # Elixir
-        pred['elixir'] = {'bounding_box': ELIXIR_BOUNDING_BOX,
-                          'confidence': 1.0,
+        pred['elixir'] = {'confidence': 1.0,
                           'number': self.calculate_elixir(image)}
         return pred
     
