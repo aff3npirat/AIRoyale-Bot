@@ -6,7 +6,7 @@ from state.units import UnitDetector
 from state.cards import BlueCardDetector
 from state.numbers import NumberDetector
 from bots.single_deck.nn import BoardEmbedding, DenseNet
-from constants import UNIT_NAMES, TILES_X, TILES_Y, CARD_TO_UNITS, KING_HP, PRINCESS_HP
+from constants import UNIT_NAMES, TILES_X, TILES_Y, CARD_TO_UNITS
 
 
 
@@ -136,9 +136,9 @@ class SingleDeckBot(BotBase):
 
         for name in self.towers_destroyed:
             num = numbers[name]["number"]
-            if num >= 0.0 and self.towers_unhit:
+            if num >= 0.0 and self.towers_unhit[name]:
                 self.towers_unhit[name] = False
-            elif num < 0 and not self.towers_unhit:
+            elif num < 0 and not self.towers_unhit[name]:
                 self.towers_destroyed[name] = True
 
         NumberDetector.relative_tower_hp(numbers, king_level=self.king_levels)
@@ -215,6 +215,20 @@ if __name__ == "__main__":
 
     font = ImageFont.load_default()
 
+    # class FakeScreen():
+    #     def __init__(self, in_dir):
+    #         self.i = 0
+    #         self.in_dir = in_dir
+    #         self.files = sorted(list(os.listdir(self.in_dir)), key=lambda x: int(x[:-4]))
+
+    #     def take_screenshot(self):
+    #         img = Image.open(os.path.join(self.in_dir, self.files[self.i]), "r")
+    #         self.i += 1
+    #         return img
+        
+    # bot.screen = FakeScreen(r"C:\Users\jurek\Desktop\projects\python\AI-Royale-dev\AIRoyale\data\game_screenshots\game_1")
+
+
     count = 0
     image = bot.screen.take_screenshot()
     width, height = image.size
@@ -223,7 +237,7 @@ if __name__ == "__main__":
         action = bot.get_actions(state, eps=1.0)
         bot.play_actions(action)
 
-        log_root.info(f"[{count}] action={action}, handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}")
+        log_root.info(f"[{count}] action={action}, handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}, towers_destroyed={bot.towers_destroyed}, towers_unhit={bot.towers_unhit}")
 
         units = bot.unit_detector.run(image)
         numbers = bot.number_detector.run(image)
@@ -328,7 +342,7 @@ if __name__ == "__main__":
         image = bot.screen.take_screenshot()
         count += 1
 
-    image.save(os.path.join(OUTPUT, "img_-1_game_end.png"))
+    image.save(os.path.join(OUTPUT, "img_-1.png"))
 
     print("Detected game end")
     while not bot.is_game_end(image):
