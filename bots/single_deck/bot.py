@@ -72,7 +72,6 @@ class SingleDeckBot(BotBase):
         
         handcards = sorted(filter(lambda x: x["deck_id"] >= 0, cards[1:]), key=lambda x: x["deck_id"])
         self.sorted_handcards = handcards
-        self.illegal_actions = 4 - len(handcards)
         for i in range(len(handcards)):
             idx = handcards[i]["deck_id"] + CARDS_START + i*8
             context[idx] = 1.0
@@ -138,11 +137,15 @@ class SingleDeckBot(BotBase):
     
     @torch.no_grad()
     def get_actions(self, state, eps=0.0):
+        N_cards = len(self.sorted_handcards)
+        illegal_actions = [i+1 for i in range(4) if i>=N_cards or not self.sorted_handcards[i]["ready"]]
+
         if np.random.rand() < eps:
-            action = np.random.choice(np.arange(5-self.illegal_actions))
+            actions = [i for i in range(5) if i not in illegal_actions]
+            action = np.random.choice(np.array(actions))
         else:
             q_vals = self.Q_net(state)
-            q_vals[-self.illegal_actions:] = -torch.inf
+            q_vals[illegal_actions] = -torch.inf
             action = torch.argmax(q_vals)
 
         if action == 0:
@@ -204,7 +207,7 @@ if __name__ == "__main__":
         action = bot.get_actions(state, eps=1.0)
         bot.play_actions(action)
 
-        log_root.info(f"[{count}] action={action}, illegal_actions={bot.illegal_actions}, handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}")
+        log_root.info(f"[{count}] action={action}, handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}")
 
         units = bot.unit_detector.run(image)
         numbers = bot.number_detector.run(image)
