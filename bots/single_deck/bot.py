@@ -145,8 +145,8 @@ class SingleDeckBot(BotBase):
         illegal_actions = [i+1 for i in range(4) if i>=N_cards or not self.sorted_handcards[i]["ready"]]
 
         if np.random.rand() < eps:
-            actions = [i for i in range(5) if i not in illegal_actions]
-            action = np.random.choice(np.array(actions))
+            legal_actions = [i for i in range(5) if i not in illegal_actions]
+            action = np.random.choice(np.array(legal_actions))
         else:
             q_vals = self.Q_net(state)
             q_vals[illegal_actions] = -torch.inf
