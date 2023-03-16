@@ -3,7 +3,7 @@ DATA_DIR = "./data/"
 # game screens
 SCREEN_CONFIG = {
     "in_game": ((80, 630, 93, 645), 20),
-    "victory": ((140, 260, 220, 270), 40),
+    "victory": ((140, 260, 220, 270), 75),
     "game_end": ((143, 558, 225, 588), 20),
     "overtime": ((315, 8, 359, 13), 125)
 }

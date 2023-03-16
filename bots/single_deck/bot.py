@@ -243,7 +243,7 @@ if __name__ == "__main__":
 
         state = bot.get_state(image)
         action = bot.get_actions(state, eps=1.0)
-        bot.play_actions(action)
+        # bot.play_actions(action)
 
         log_root.info(f"[{count}] action={action}, handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}, towers_destroyed={bot.towers_destroyed}, towers_unhit={bot.towers_unhit}")
 

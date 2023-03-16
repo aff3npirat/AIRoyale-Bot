@@ -16,14 +16,13 @@ class BotBase:
         self.screen_hashes = {}
         self.hash_size = hash_size
 
-        for key in ["in_game", "game_end", "overtime"]:
+        for key in SCREEN_CONFIG:
             with Image.open(os.path.join(DATA_DIR, f"images/screens/{key}.png"), mode="r") as I:
-                self.screen_hashes[key] = self._compute_image_hash(I)
+                self.screen_hashes[key] = self._compute_image_hash(I, self.hash_size)
 
-        self.screen_hashes["victory"] = np.load(os.path.join(DATA_DIR, "images/screens/victory_hash.npy"), allow_pickle=False)
-
-    def _compute_image_hash(self, image):
-        image_hash = image.resize((self.hash_size, self.hash_size), Image.Resampling.BILINEAR).convert("L")
+    @staticmethod
+    def _compute_image_hash(image, hash_size):
+        image_hash = image.resize((hash_size, hash_size), Image.Resampling.BILINEAR).convert("L")
         image_hash = np.array(image_hash).flatten()
         return image_hash
     
@@ -55,7 +54,7 @@ class BotBase:
     
     def detect_game_screen(self, image, screen_key):
         bbox, thr = SCREEN_CONFIG[screen_key]
-        actual_hash = self._compute_image_hash(image.crop(bbox))
+        actual_hash = self._compute_image_hash(image.crop(bbox), self.hash_size)
 
         diff = np.mean(np.abs(self.screen_hashes[screen_key] - actual_hash))
 
@@ -77,7 +76,18 @@ class BotBase:
         """
         Returns True if image is victory screen.
         """
-        return self.detect_game_screen(image, "victory")
+        bbox, thr = SCREEN_CONFIG["victory"]
+        crop = image.crop(bbox).convert("L")
+        
+        crop = np.array(crop)
+        mask = (crop<100)
+        crop[mask] = 0
+        crop[~mask] = 255
+
+        actual_hash = self._compute_image_hash(Image.fromarray(crop), self.hash_size)
+        diff = np.mean(np.abs(self.screen_hashes["victory"] - actual_hash))
+
+        return diff < thr
     
     def run(self, auto_play):
         if auto_play:
