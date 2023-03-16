@@ -40,6 +40,9 @@ UNIT_Y_END = 521.6
 UNIT_W = 416
 UNIT_H = 416
 
+# side detector
+BBOX_Y_OFFSET = 10  # enlarge bbox from unit detector to ensure healthbar/level is in crop
+
 # Bounding box of elixir, turret helth bars, king level
 ELIXIR_X = 120
 ELIXIR_Y = 635

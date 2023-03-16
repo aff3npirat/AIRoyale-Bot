@@ -16,9 +16,8 @@ from constants import (
     TILE_END_Y,
     TILE_WIDTH,
     TILE_HEIGHT,
-    SCREENSHOT_HEIGHT,
     SCREENSHOT_WIDTH,
-    CARD_Y
+    BBOX_Y_OFFSET,
 )
 
 
@@ -52,7 +51,9 @@ class UnitDetector(OnnxDetector):
         return img / 255
     
     def calculate_side(self, image, predictions):
-        bboxes = np.round(predictions[:, :4])
+        bboxes = predictions[:, :4].copy()
+        y1 = bboxes[:, 1] - BBOX_Y_OFFSET
+        bboxes[:, 1] = np.clip(y1, 0.0, None)
         sides = np.ones(len(predictions))
         for i in range(len(predictions)):
             l = int(predictions[i, 5])
