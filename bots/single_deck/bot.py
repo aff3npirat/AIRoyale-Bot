@@ -94,8 +94,9 @@ class SingleDeckBot(BotBase):
             context[READY_START+i] = int(handcards[i]["ready"])
 
         # next card
-        idx = cards[0]["deck_id"] + READY_END
-        context[idx] = 1.0
+        if cards[0]["deck_id"] >= 0:
+            idx = cards[0]["deck_id"] + NEXT_CARD_START
+            context[idx] = 1.0
 
         return context
     
