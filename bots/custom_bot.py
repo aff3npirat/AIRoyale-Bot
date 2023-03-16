@@ -35,7 +35,6 @@ class BotBase:
 
         return x, y
 
-
     def get_state(self, image):
         """
         Extracts state from image.
