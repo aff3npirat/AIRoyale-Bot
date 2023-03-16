@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 
 from screen import Screen
-from constants import SCREEN_CONFIG, DATA_DIR, CARD_HEIGHT, CARD_WIDTH, CARD_CONFIG
+from constants import SCREEN_CONFIG, CONVERSION_MATS, DATA_DIR, CARD_HEIGHT, CARD_WIDTH, CARD_CONFIG
 
 
 
@@ -17,12 +17,16 @@ class BotBase:
         self.hash_size = hash_size
 
         for key in SCREEN_CONFIG:
+            mat = None
+            if key in CONVERSION_MATS:
+                mat = CONVERSION_MATS[key]
             with Image.open(os.path.join(DATA_DIR, f"images/screens/{key}.png"), mode="r") as I:
-                self.screen_hashes[key] = BotBase._compute_image_hash(I, self.hash_size)
+                self.screen_hashes[key] = BotBase._compute_image_hash(I, self.hash_size, conversion_mat=mat)
 
     @staticmethod
-    def _compute_image_hash(image, hash_size):
-        image_hash = image.resize((hash_size, hash_size), Image.Resampling.BILINEAR).convert("L")
+    def _compute_image_hash(image, hash_size, conversion_mat=None):
+        mode = "L" if conversion_mat is None else None
+        image_hash = image.resize((hash_size, hash_size), Image.Resampling.BILINEAR).convert(mode=mode, matrix=conversion_mat)
         image_hash = np.array(image_hash, dtype=float).flatten()
         return image_hash
     
@@ -52,9 +56,9 @@ class BotBase:
         """
         raise NotImplementedError
     
-    def detect_game_screen(self, image, screen_key):
+    def detect_game_screen(self, image, screen_key, conversion_mat=None):
         bbox, thr = SCREEN_CONFIG[screen_key]
-        actual_hash = self._compute_image_hash(image.crop(bbox), self.hash_size)
+        actual_hash = self._compute_image_hash(image.crop(bbox), self.hash_size, conversion_mat=conversion_mat)
 
         diff = np.mean(np.abs(self.screen_hashes[screen_key] - actual_hash))
 
@@ -70,7 +74,9 @@ class BotBase:
         """
         Returns True when not in game.
         """
-        return self.detect_game_screen(image, "in_game")
+        conversion_matrix = np.zeros((4, 4))
+        conversion_matrix[2, 2] = 1.0
+        return self.detect_game_screen(image, "in_game", conversion_mat=conversion_matrix)
     
     def is_victory(self, image):
         """
