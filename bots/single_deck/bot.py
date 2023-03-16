@@ -13,7 +13,7 @@ from constants import UNIT_NAMES, TILES_X, TILES_Y, CARD_TO_UNITS
 EMB_SIZE = 512
 OVERTIME = 0
 HEALTH_START = OVERTIME + 1
-HEALTH_END = HEALTH_START + 6
+HEALTH_END = HEALTH_START + 4
 ELIXIR = HEALTH_END
 CARDS_START = ELIXIR + 1
 CARDS_END = CARDS_START + 32
@@ -43,7 +43,7 @@ class SingleDeckBot(BotBase):
         self.number_detector = NumberDetector(number_model_path)
         self.card_detector = BlueCardDetector(card_names=deck_names)
         self.board_emb = BoardEmbedding()
-        self.Q_net = DenseNet([512+51, 128, 64, 5], activation="sigmoid", bias=True, feature_extractor=False)
+        self.Q_net = DenseNet([512+NEXT_CARD_END-1, 128, 64, 5], activation="sigmoid", bias=True, feature_extractor=False)
 
         label_to_deck_id = {}
         for i, name in enumerate(deck_names):
@@ -52,7 +52,7 @@ class SingleDeckBot(BotBase):
             label_to_deck_id[UNIT_NAMES.index(name)] = i
         self.label_to_deck_id = label_to_deck_id
 
-        self.towers_destroyed = {k: False for k in ["enemy_king_hp", "ally_king_hp", "right_ally_princess_hp", "left_ally_princess_hp",  "right_enemy_princess_hp", "left_enemy_princess_hp"]}
+        self.towers_destroyed = {k: False for k in ["enemy_king_hp", "ally_king_hp", f"{side}_ally_princess_hp", f"{side}_enemy_princess_hp"]}
         self.towers_unhit = {k: True for k in self.towers_destroyed}
         self.king_levels = king_levels if king_levels is not None else {"ally": 1, "enemy": 1}
 
@@ -243,7 +243,7 @@ if __name__ == "__main__":
 
         state = bot.get_state(image)
         action = bot.get_actions(state, eps=1.0)
-        bot.play_actions(action)
+        # bot.play_actions(action)
 
         log_root.info(f"[{count}] action={action}, handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}, towers_destroyed={bot.towers_destroyed}, towers_unhit={bot.towers_unhit}")
 
@@ -291,8 +291,10 @@ if __name__ == "__main__":
 
         # draw health
         nums = context[HEALTH_START:HEALTH_END]
-        for i in range(6):
-            name, (x1, y1, _, _) = TOWER_HP_BOXES[i]
+        for i in range(HEALTH_END-HEALTH_START):
+            for name, (x1, y1, _, _) in TOWER_HP_BOXES:
+                if name == list(bot.towers_destroyed.keys())[i]:
+                    break
             num = f"{nums[i]:.2f}"
 
             draw.text((x1, y1-10), num, fill="black", font=font, anchor="lb")
