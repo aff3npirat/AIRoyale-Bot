@@ -114,4 +114,5 @@ CARD_TO_UNITS = {
     "archers": "archer",
     "minions": "minion",
     "goblins": "goblin",
+    "speargoblins": "speargoblin",
 }

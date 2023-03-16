@@ -6,9 +6,20 @@ from state.units import UnitDetector
 from state.cards import BlueCardDetector
 from state.numbers import NumberDetector
 from bots.single_deck.nn import BoardEmbedding, DenseNet
-from constants import UNIT_NAMES, TILES_X, TILES_Y, CARD_TO_UNITS
+from constants import TILES_X, TILES_Y, CARD_TO_UNITS
 
 
+
+UNIT_NAMES = [
+    'archer',
+    'arrows',
+    'giant',
+    'knight',
+    'minion',
+    'minipekka',
+    'musketeer',
+    'speargoblin',
+]
 
 EMB_SIZE = 512
 OVERTIME = 0
@@ -43,7 +54,7 @@ class SingleDeckBot(BotBase):
         self.number_detector = NumberDetector(number_model_path)
         self.card_detector = BlueCardDetector(card_names=deck_names)
         self.board_emb = BoardEmbedding()
-        self.Q_net = DenseNet([512+NEXT_CARD_END-1, 128, 64, 5], activation="sigmoid", bias=True, feature_extractor=False)
+        self.Q_net = DenseNet([512+NEXT_CARD_END, 128, 64, 5], activation="sigmoid", bias=True, feature_extractor=False)
 
         label_to_deck_id = {}
         for i, name in enumerate(deck_names):
@@ -82,6 +93,7 @@ class SingleDeckBot(BotBase):
             context[idx] = 1.0
             context[READY_START+i] = int(handcards[i]["ready"])
 
+        # next card
         idx = cards[0]["deck_id"] + READY_END
         context[idx] = 1.0
 
@@ -210,14 +222,16 @@ if __name__ == "__main__":
     log_root.info("Initialized logging")
 
 
-    deck_names = ["minions", "giant", "goblins", "musketeer", "minipekka", "knight", "archers", "arrows"]
+    deck_names = ["minions", "giant", "speargoblins", "musketeer", "minipekka", "knight", "archers", "arrows"]
     bot = SingleDeckBot(
         side="left",
-        unit_model_path="./models/units_cpu.onnx",
+        unit_model_path="./models/units_singledeck_cpu.onnx",
         number_model_path="./models/number_cpu.onnx",
         side_model_path="./models/side_cpu.onnx",
         deck_names=deck_names,
     )
+
+    log_root.info(f"Ally units={bot.unit_detector.ally_units}")
 
     font = ImageFont.load_default()
 
@@ -243,7 +257,7 @@ if __name__ == "__main__":
 
         state = bot.get_state(image)
         action = bot.get_actions(state, eps=1.0)
-        # bot.play_actions(action)
+        bot.play_actions(action)
 
         log_root.info(f"[{count}] action={action}, handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}, towers_destroyed={bot.towers_destroyed}, towers_unhit={bot.towers_unhit}")
 

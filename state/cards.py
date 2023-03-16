@@ -9,7 +9,7 @@ from constants import CARD_CONFIG, DATA_DIR, MULTI_HASH_SCALE, MULTI_HASH_INTERC
 
 class BlueCardDetector:
     
-    def __init__(self, card_names, hash_size=8, gray_std_threshold=5):
+    def __init__(self, card_names, hash_size=8):
         self.card_names = card_names
         self.hash_size = hash_size
 
@@ -49,9 +49,9 @@ class BlueCardDetector:
         i = 0
         with open(f'{DATA_DIR}/cards.csv') as f:
             for line in f:
-                name, _, cost, _, _, _ = line.strip().replace('"', '').split(',')
+                name, path, cost = line.strip().replace('"', '').split(',')
                 if name in self.card_names:
-                    path = os.path.join(DATA_DIR, 'images', 'cards', f'{name}.png')
+                    path = os.path.join(DATA_DIR, path)
                     card = Image.open(path)
                     multi_hash = self._calculate_multi_hash(card)
                     card_hashes[i] = np.tile(np.expand_dims(multi_hash, axis=2), (1, 1, HAND_SIZE))
