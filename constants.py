@@ -5,6 +5,7 @@ SCREEN_CONFIG = {
     "in_game": ((359, 535, 367, 600), 20),
     "victory": ((140, 260, 220, 270), 40),
     "game_end": ((143, 558, 225, 588), 20),
+    "overtime": ((315, 8, 359, 13), 125)
 }
 
 # screenshot dimensions

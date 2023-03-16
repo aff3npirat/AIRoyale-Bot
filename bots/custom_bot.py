@@ -16,7 +16,7 @@ class BotBase:
         self.screen_hashes = {}
         self.hash_size = hash_size
 
-        for key in ["in_game", "game_end"]:
+        for key in ["in_game", "game_end", "overtime"]:
             with Image.open(os.path.join(DATA_DIR, f"images/screens/{key}.png"), mode="r") as I:
                 self.screen_hashes[key] = self._compute_image_hash(I)
 

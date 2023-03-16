@@ -11,15 +11,16 @@ from constants import UNIT_NAMES, TILES_X, TILES_Y, CARD_TO_UNITS
 
 
 EMB_SIZE = 512
-HEALTH_START = 0
-HEALTH_END = 6
-ELIXIR = 6
-CARDS_START = 7
-CARDS_END = 39
-READY_START = 39
-READY_END = 43
-NEXT_CARD_START = 43
-NEXT_CARD_END = 51
+OVERTIME = 0
+HEALTH_START = OVERTIME + 1
+HEALTH_END = HEALTH_START + 6
+ELIXIR = HEALTH_END
+CARDS_START = ELIXIR + 1
+CARDS_END = CARDS_START + 32
+READY_START = CARDS_END
+READY_END = READY_START + 4
+NEXT_CARD_START = READY_END
+NEXT_CARD_END = NEXT_CARD_START + 8
 
 
 class SingleDeckBot(BotBase):
@@ -55,8 +56,10 @@ class SingleDeckBot(BotBase):
         self.towers_unhit = {k: True for k in self.towers_destroyed}
         self.king_levels = king_levels if king_levels is not None else {"ally": 1, "enemy": 1}
 
-    def _get_context(self, numbers, cards):
-        context = torch.zeros((NEXT_CARD_END), dtype=torch.float32)  # turret health, elixir, handcards, handcards ready, next handcard
+    def _get_context(self, numbers, cards, overtime):
+        context = torch.zeros((NEXT_CARD_END), dtype=torch.float32)  # overtime, turret health, elixir, handcards, handcards ready, next handcard
+
+        context[OVERTIME] = 1.0 if overtime else 0.0
 
         for i, name in enumerate(self.towers_destroyed):
             if self.towers_destroyed[name]:
@@ -66,7 +69,7 @@ class SingleDeckBot(BotBase):
             else:
                 hp = numbers[name]["number"]
 
-            context[i] = hp
+            context[HEALTH_START + i] = hp
 
 
         context[ELIXIR] = numbers["elixir"]["number"]
@@ -143,8 +146,10 @@ class SingleDeckBot(BotBase):
 
         NumberDetector.relative_tower_hp(numbers, king_level=self.king_levels)
 
+        overtime = self.detect_game_screen(image, "overtime")
+
         self.handcards = [x["name"] for x in cards[1:]]
-        context = self._get_context(numbers, cards)
+        context = self._get_context(numbers, cards, overtime)
 
         board = self._get_board_state(units)
         emb = self.board_emb(board)
@@ -196,6 +201,7 @@ if __name__ == "__main__":
     OUTPUT = "./output/debug/single_deck_bot"
     if not os.path.exists(OUTPUT):
         os.makedirs(OUTPUT)
+        os.makedirs(f"{OUTPUT}/raw")
 
     log_root = logging.getLogger()
     log_root.setLevel(logging.INFO)
@@ -233,9 +239,11 @@ if __name__ == "__main__":
     image = bot.screen.take_screenshot()
     width, height = image.size
     while bot.in_game(image):
+        image.save(f"{OUTPUT}/raw/img_{count}.png")
+
         state = bot.get_state(image)
         action = bot.get_actions(state, eps=1.0)
-        bot.play_actions(action)
+        # bot.play_actions(action)
 
         log_root.info(f"[{count}] action={action}, handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}, towers_destroyed={bot.towers_destroyed}, towers_unhit={bot.towers_unhit}")
 
@@ -277,8 +285,12 @@ if __name__ == "__main__":
 
         draw.text((width-50, 50), f"{count}", fill="black", font=font)
 
+        # draw overtime
+        overtime = context[OVERTIME]
+        draw.text((307, 40), f"{'overtime' if overtime else 'normal'}", fill="black", font=font, anchor="lt")
+
         # draw health
-        nums = context[:6]
+        nums = context[HEALTH_START:HEALTH_END]
         for i in range(6):
             name, (x1, y1, _, _) = TOWER_HP_BOXES[i]
             num = f"{nums[i]:.2f}"
