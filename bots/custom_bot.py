@@ -23,7 +23,7 @@ class BotBase:
     @staticmethod
     def _compute_image_hash(image, hash_size):
         image_hash = image.resize((hash_size, hash_size), Image.Resampling.BILINEAR).convert("L")
-        image_hash = np.array(image_hash).flatten()
+        image_hash = np.array(image_hash, dtype=float).flatten()
         return image_hash
     
     @staticmethod
