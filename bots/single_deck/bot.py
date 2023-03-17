@@ -6,6 +6,7 @@ from state.units import UnitDetector
 from state.cards import BlueCardDetector
 from state.numbers import NumberDetector
 from bots.single_deck.nn import BoardEmbedding, DenseNet
+from timing import exec_time
 from constants import TILES_X, TILES_Y
 
 
@@ -49,6 +50,7 @@ class SingleDeckBot(BotBase):
         self.towers_unhit = {k: True for k in self.towers_destroyed}
         self.king_levels = king_levels if king_levels is not None else {"ally": 1, "enemy": 1}
 
+    @exec_time
     def _get_context(self, numbers, cards, overtime):
         context = torch.zeros((NEXT_CARD_END), dtype=torch.float32)  # overtime, turret health, elixir, handcards, handcards ready, next handcard
 
@@ -82,6 +84,7 @@ class SingleDeckBot(BotBase):
 
         return context
     
+    @exec_time
     def _get_board_state(self, units):
         labels, bboxes, team = units
 
@@ -115,6 +118,7 @@ class SingleDeckBot(BotBase):
 
         return board
 
+    @exec_time
     @torch.no_grad()
     def get_state(self, image):
         units = self.unit_detector.run(image)  # label, tile, side
@@ -147,6 +151,7 @@ class SingleDeckBot(BotBase):
 
         return torch.cat((emb, context))
     
+    @exec_time
     @torch.no_grad()
     def get_actions(self, state, eps=0.0):
         N_cards = len(self.sorted_handcards)
@@ -187,6 +192,7 @@ if __name__ == "__main__":
     import cv2
     from PIL import ImageDraw, ImageFont, Image
 
+    import timing
     from constants import TILE_WIDTH, TILE_HEIGHT, TOWER_HP_BOXES, CARD_CONFIG, SCREEN_CONFIG
 
     UNIT_NAMES = [
@@ -206,11 +212,19 @@ if __name__ == "__main__":
         os.makedirs(OUTPUT)
         os.makedirs(f"{OUTPUT}/raw")
 
-    log_root = logging.getLogger()
-    log_root.setLevel(logging.INFO)
-    handler_file = logging.FileHandler(os.path.join(OUTPUT, "log.txt"), mode="w+")
-    log_root.addHandler(handler_file)
-    log_root.info("Initialized logging")
+    bot_logger = logging.getLogger("bot")
+    bot_logger.setLevel(logging.INFO)
+    handler_file = logging.FileHandler(os.path.join(OUTPUT, "bot.log"), mode="w+")
+    bot_logger.addHandler(handler_file)
+    bot_logger.info("Initialized bot logging")
+
+    time_logger = logging.getLogger("time")
+    time_logger.setLevel(logging.INFO)
+    handler_file = logging.FileHandler(os.path.join(OUTPUT, "time.log"), mode="w+")
+    time_logger.addHandler(handler_file)
+    time_logger.info("Initialized time logging")
+
+    timing.logger = time_logger
 
 
     deck_names = ["minions", "giant", "speargoblins", "musketeer", "minipekka", "knight", "archers", "arrows"]
@@ -222,7 +236,7 @@ if __name__ == "__main__":
         deck_names=deck_names,
     )
 
-    log_root.info(f"Ally units={bot.unit_detector.ally_units}")
+    bot_logger.info(f"Ally units={bot.unit_detector.ally_units}")
 
     font = ImageFont.load_default()
 
@@ -247,10 +261,10 @@ if __name__ == "__main__":
         image.save(f"{OUTPUT}/raw/img_{count}.png")
 
         state = bot.get_state(image)
-        action = bot.get_actions(state, eps=1.0)
+        action = bot.get_actions(state, eps=0.8)
         bot.play_actions(action)
 
-        log_root.info(f"[{count}] action={action}, handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}, towers_destroyed={bot.towers_destroyed}, towers_unhit={bot.towers_unhit}")
+        bot_logger.info(f"[{count}] action={action}, handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}, towers_destroyed={bot.towers_destroyed}, towers_unhit={bot.towers_unhit}")
 
         units = bot.unit_detector.run(image)
         numbers = bot.number_detector.run(image)

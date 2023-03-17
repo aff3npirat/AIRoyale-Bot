@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+from timing import exec_time
+
 
 
 def name_to_activation(act_name):
@@ -45,6 +47,7 @@ class BoardEmbedding(nn.Module):
         self.downsample = nn.Conv2d(16, 16, (3, 3), padding=0, stride=2, bias=False)
         self.linear = nn.Linear(14*8*16, 512, bias=False)
 
+    @exec_time
     def forward(self, x):
         x = x.unsqueeze(0)
         x = self.blocks(x)
@@ -97,5 +100,6 @@ class DenseNet(nn.Module):
 
         self.layers = nn.Sequential(*layers)
 
+    @exec_time
     def forward(self, x):
         return self.layers(x.unsqueeze(0)).squeeze(0)
