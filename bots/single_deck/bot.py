@@ -193,7 +193,7 @@ if __name__ == "__main__":
     from PIL import ImageDraw, ImageFont, Image
 
     import timing
-    from constants import TILE_WIDTH, TILE_HEIGHT, TOWER_HP_BOXES, CARD_CONFIG, SCREEN_CONFIG
+    from constants import TILE_WIDTH, TILE_HEIGHT, TOWER_HP_BOXES, CARD_CONFIG, SCREEN_CONFIG, PRINCESS_Y_OFFSET
 
     UNIT_NAMES = [
         'archer',
@@ -206,8 +206,12 @@ if __name__ == "__main__":
         'speargoblin',
     ]
 
+    for i, (name, (x1, y1, x2, y2)) in enumerate(TOWER_HP_BOXES):
+        if "princess" in name:
+            TOWER_HP_BOXES[i][1] = (x1, y1-PRINCESS_Y_OFFSET, x2, y2-PRINCESS_Y_OFFSET)
 
-    OUTPUT = "./output/debug/single_deck_bot_"
+
+    OUTPUT = "./output/debug/single_deck_bot___"
     if not os.path.exists(OUTPUT):
         os.makedirs(OUTPUT)
         os.makedirs(f"{OUTPUT}/raw")
@@ -229,11 +233,12 @@ if __name__ == "__main__":
 
     deck_names = ["minions", "giant", "speargoblins", "musketeer", "minipekka", "knight", "archers", "arrows"]
     bot = SingleDeckBot(
-        side="right",
+        side="left",
         unit_model_path="./models/units_singledeck_cpu.onnx",
         number_model_path="./models/number_cpu.onnx",
         side_model_path="./models/side_cpu.onnx",
         deck_names=deck_names,
+        port=5555,
     )
 
     bot_logger.info(f"Ally units={bot.unit_detector.ally_units}")
