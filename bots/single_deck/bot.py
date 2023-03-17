@@ -29,8 +29,8 @@ class SingleDeckBot(BotBase):
     Can only see 8 different cards, that are all in his deck.
     """
 
-    def __init__(self, side, unit_model_path, number_model_path, side_model_path, deck_names, hash_size=8, king_levels=None):
-        super().__init__(hash_size=hash_size)
+    def __init__(self, side, unit_model_path, number_model_path, side_model_path, deck_names, hash_size=8, king_levels=None, port=5555):
+        super().__init__(hash_size=hash_size, port=port)
 
         tile_y = 22
         if side == "right":
@@ -207,7 +207,7 @@ if __name__ == "__main__":
     ]
 
 
-    OUTPUT = "./output/debug/single_deck_bot"
+    OUTPUT = "./output/debug/single_deck_bot_"
     if not os.path.exists(OUTPUT):
         os.makedirs(OUTPUT)
         os.makedirs(f"{OUTPUT}/raw")
@@ -229,7 +229,7 @@ if __name__ == "__main__":
 
     deck_names = ["minions", "giant", "speargoblins", "musketeer", "minipekka", "knight", "archers", "arrows"]
     bot = SingleDeckBot(
-        side="left",
+        side="right",
         unit_model_path="./models/units_singledeck_cpu.onnx",
         number_model_path="./models/number_cpu.onnx",
         side_model_path="./models/side_cpu.onnx",

@@ -10,8 +10,8 @@ from constants import SCREEN_CONFIG, CONVERSION_MATS, DATA_DIR, CARD_HEIGHT, CAR
 
 class BotBase:
 
-    def __init__(self, hash_size=8):
-        self.screen = Screen()
+    def __init__(self, hash_size=8, port=5555):
+        self.screen = Screen(port=port)
 
         self.screen_hashes = {}
         self.hash_size = hash_size
