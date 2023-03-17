@@ -97,34 +97,3 @@ CARD_CONFIG = [
 # Multihash coefficients
 MULTI_HASH_SCALE = 0.355
 MULTI_HASH_INTERCEPT = 163
-
-# card names
-UNIT_NAMES = [
-    'archer',
-    'arrows',
-    'babydragon',
-    'cagegoblin',
-    'fireball',
-    'giant',
-    'goblin',
-    'goblincage',
-    'goblinhut',
-    'hunter',
-    'knight',
-    'minion',
-    'minipekka',
-    'musketeer',
-    'prince',
-    'skeleton',
-    'speargoblin',
-    'tombstone',
-    'valkyrie',
-    'wallbreaker',
-]
-
-CARD_TO_UNITS = {
-    "archers": "archer",
-    "minions": "minion",
-    "goblins": "goblin",
-    "speargoblins": "speargoblin",
-}

@@ -9,8 +9,6 @@ from constants import (
     UNIT_W,
     UNIT_Y_START,
     UNIT_Y_END,
-    UNIT_NAMES,
-    CARD_TO_UNITS,
     TILE_INIT_X,
     TILE_INIT_Y,
     TILE_END_Y,
@@ -24,21 +22,16 @@ from constants import (
 
 class UnitDetector(OnnxDetector):
     
-    def __init__(self, model_path, side_detector_path, ally_cards):
+    def __init__(self, model_path, side_detector_path, ally_units):
+        """
+        Parameters
+        ----------
+        model_path, side_detector_path : str
+        ally_units : list
+            List of unit ally unit labels.
+        """
         super().__init__(model_path)
         self.side_detector = SideDetector(side_detector_path)
-
-        ally_units = []
-        for card in ally_cards:
-            if card in CARD_TO_UNITS:
-                units = CARD_TO_UNITS[card]
-                if not isinstance(units, list):
-                    units = [units]
-
-                ally_units += units
-            else:
-                ally_units.append(card)
-                    
         self.ally_units = ally_units
 
     @staticmethod
@@ -54,18 +47,17 @@ class UnitDetector(OnnxDetector):
         bboxes = predictions[:, :4].copy()
         y1 = bboxes[:, 1] - BBOX_Y_OFFSET
         bboxes[:, 1] = np.clip(y1, 0.0, None)
-        sides = np.ones(len(predictions))
+        teams = np.ones(len(predictions))
         for i in range(len(predictions)):
             l = int(predictions[i, 5])
 
-            name = UNIT_NAMES[l]
-            if name not in self.ally_units:
+            if l not in self.ally_units:
                 continue
             else:
                 crop = image.crop(bboxes[i])
-                sides[i] = self.side_detector.run(crop)
+                teams[i] = self.side_detector.run(crop)
 
-        return sides
+        return teams
     
     @staticmethod
     def xy_to_tile(x, y):

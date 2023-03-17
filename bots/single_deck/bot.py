@@ -6,20 +6,9 @@ from state.units import UnitDetector
 from state.cards import BlueCardDetector
 from state.numbers import NumberDetector
 from bots.single_deck.nn import BoardEmbedding, DenseNet
-from constants import TILES_X, TILES_Y, CARD_TO_UNITS
+from constants import TILES_X, TILES_Y
 
 
-
-UNIT_NAMES = [
-    'archer',
-    'arrows',
-    'giant',
-    'knight',
-    'minion',
-    'minipekka',
-    'musketeer',
-    'speargoblin',
-]
 
 EMB_SIZE = 512
 OVERTIME = 0
@@ -50,18 +39,11 @@ class SingleDeckBot(BotBase):
 
         self.place_pos = UnitDetector.tile_to_xy(tile_x, tile_y)
 
-        self.unit_detector = UnitDetector(unit_model_path, side_model_path, deck_names)
+        self.unit_detector = UnitDetector(unit_model_path, side_model_path, [i for i in range(8)])
         self.number_detector = NumberDetector(number_model_path)
         self.card_detector = BlueCardDetector(card_names=deck_names)
         self.board_emb = BoardEmbedding()
         self.Q_net = DenseNet([512+NEXT_CARD_END, 128, 64, 5], activation="sigmoid", bias=True, feature_extractor=False)
-
-        label_to_deck_id = {}
-        for i, name in enumerate(deck_names):
-            if name in CARD_TO_UNITS:
-                name = CARD_TO_UNITS[name]
-            label_to_deck_id[UNIT_NAMES.index(name)] = i
-        self.label_to_deck_id = label_to_deck_id
 
         self.towers_destroyed = {k: False for k in ["enemy_king_hp", "ally_king_hp", f"{side}_ally_princess_hp", f"{side}_enemy_princess_hp"]}
         self.towers_unhit = {k: True for k in self.towers_destroyed}
@@ -118,10 +100,6 @@ class SingleDeckBot(BotBase):
 
         board = torch.zeros((16, TILES_Y, TILES_X), dtype=torch.float32)
         for i, label in enumerate(labels):
-            if label not in self.label_to_deck_id:
-                continue
-
-            label = self.label_to_deck_id[label]
             channel_idx = team[i]*8 + label
             tx = tile_x[i]
             ty = tile_y[i]
@@ -210,6 +188,18 @@ if __name__ == "__main__":
     from PIL import ImageDraw, ImageFont, Image
 
     from constants import TILE_WIDTH, TILE_HEIGHT, TOWER_HP_BOXES, CARD_CONFIG, SCREEN_CONFIG
+
+    UNIT_NAMES = [
+        'archer',
+        'arrows',
+        'giant',
+        'knight',
+        'minion',
+        'minipekka',
+        'musketeer',
+        'speargoblin',
+    ]
+
 
     OUTPUT = "./output/debug/single_deck_bot"
     if not os.path.exists(OUTPUT):
@@ -355,7 +345,7 @@ if __name__ == "__main__":
             draw.rectangle([x1, y1, x2, y2], outline=color, fill=color, width=1)
             
             # draw unit labels from state vector
-            draw.text((x2, y1), deck_names[c%8], fill=color, font=font, anchor="lt")
+            draw.text((x2, y1), UNIT_NAMES[c%8], fill=color, font=font, anchor="lt")
 
         # draw choosen action
         if action == -1:
