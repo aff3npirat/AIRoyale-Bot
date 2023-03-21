@@ -223,6 +223,14 @@ class SingleDeckBot(BotBase):
 
         self.screen.click(x, y)
         self.screen.click(*self.place_pos)
+
+    @exec_time
+    def play_single(self, image, eps):
+        state = self.get_state(image)
+        action = self.get_actions(state, eps=eps)
+        self.play_action(action)
+
+        self.store_experience(state, action)
     
 
 def debug(id, team, port):

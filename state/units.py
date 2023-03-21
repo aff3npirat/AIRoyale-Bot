@@ -2,6 +2,7 @@ import numpy as np
 from PIL import Image
 
 from state.onnx_detector import OnnxDetector
+from timing import exec_time
 from constants import (
     SIDE_H,
     SIDE_W,
@@ -114,6 +115,7 @@ class SideDetector(OnnxDetector):
         img = np.expand_dims(img, axis=0)
         return img / 255
 
+    @exec_time
     def run(self, img):
         """
         Returns 0 or 1, 0 if unit present on image is in blue team, 1 otherwise.

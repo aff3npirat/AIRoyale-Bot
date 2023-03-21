@@ -51,11 +51,7 @@ def run_bot(
         image = bot.screen.take_screenshot()
 
     while bot.in_game(image):
-        state = bot.get_state(image)
-        actions = bot.get_actions(state, eps=eps)
-        bot.play_actions(actions)
-
-        bot.store_experience(state, actions)
+        bot.play_single(image, eps)
 
         image = bot.screen.take_screenshot()
 

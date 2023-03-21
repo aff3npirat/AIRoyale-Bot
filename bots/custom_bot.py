@@ -113,16 +113,5 @@ class BotBase:
 
         return diff < thr
     
-    def run(self, eps):
-        image = self.screen.take_screenshot()
-        while not self.in_game(image):
-
-            state = self.get_state(image)
-            actions = self.get_actions(state, eps=eps)
-            self.play_actions(actions)
-
-            image = self.screen.take_screenshot()
-
-        victory = self.is_victory(image)
-
-        return victory
+    def play_single(self, image, eps):
+        raise NotImplementedError

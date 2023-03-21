@@ -3,6 +3,7 @@ from PIL import Image
 
 from constants import NUMBER_WIDTH, NUMBER_HEIGHT, TOWER_HP_BOXES, KING_HP, PRINCESS_HP, ELIXIR_RED_THR, ELIXIR_DELTA_X, ELIXIR_X, ELIXIR_Y
 from state.onnx_detector import OnnxDetector
+from timing import exec_time
 
 
 
@@ -70,6 +71,7 @@ class NumberDetector(OnnxDetector):
 
         return image
     
+    @exec_time
     def run(self, image, conf_thres=0.71, iou_thres=0.45):
         # Preprocessing
         crops = np.empty((len(TOWER_HP_BOXES), 3, NUMBER_HEIGHT, NUMBER_WIDTH), dtype=np.float32)

@@ -5,6 +5,7 @@ import numpy as np
 from PIL import Image
 
 from constants import CARD_CONFIG, DATA_DIR, MULTI_HASH_SCALE, MULTI_HASH_INTERCEPT, DECK_SIZE, HAND_SIZE
+from timing import exec_time
 
 
 class BlueCardDetector:
@@ -83,6 +84,7 @@ class BlueCardDetector:
 
         return cards, crops
 
+    @exec_time
     def run(self, image):
         cards, crops = self._detect_cards(image)
 
