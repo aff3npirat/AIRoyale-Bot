@@ -1,6 +1,7 @@
 # Play a bot vs. bot match.
 import os
 import logging
+import time
 import subprocess
 from multiprocessing import Process, Queue
 from argparse import ArgumentParser
@@ -52,7 +53,7 @@ def run_bot(
     while bot.in_game(image):
         state = bot.get_state(image)
         actions = bot.get_actions(state, eps=eps)
-        bot.play_actions(actions)
+        # bot.play_actions(actions)
 
         bot.store_experience(state, actions)
 
@@ -60,6 +61,9 @@ def run_bot(
 
     while not bot.is_game_end(image):
         image = bot.screen.take_screenshot()
+
+    time.sleep(3.0)
+    image = bot.screen.take_screenshot()
 
     victory = bot.is_victory(image)
 
@@ -77,7 +81,6 @@ def main(output, deck_names, ports, unit_model, side_model, number_model, eps):
         subprocess.run([r"..\adb\adb.exe", "connect", f"localhost:{port}"])
 
     # send 1v1 invite
-    print("Sending invites...")
     for i in range(0, num_bots, 2):
         controller.send_clan_1v1(ports[i])
 
@@ -99,16 +102,18 @@ def main(output, deck_names, ports, unit_model, side_model, number_model, eps):
         i%2==1
     )) for i in range(num_bots)]
 
-    print("Starting bots...")
     for p in processes:
         p.start()
 
-    # wait for game end
+    # save on disk
+    experiences = []
+    for _ in range(num_bots):
+        experiences.extend(out_queue.get())
+    torch.save(experiences, os.path.join(output, "experience.pt"))
+
     for p in processes:
         p.join()
-
-    # save on disk
-    torch.save(list(out_queue.queue), os.path.join(output, "experience.pt"))
+        p.close()
 
 
 if __name__ == "__main__":
