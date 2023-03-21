@@ -225,11 +225,11 @@ class SingleDeckBot(BotBase):
         self.screen.click(*self.place_pos)
     
 
-
-if __name__ == "__main__":
-    # debugging purposes
+# debugging
+def debug(id, team, port):
     import os
     import logging
+    import time
 
     import cv2
     from PIL import ImageDraw, ImageFont, Image
@@ -253,7 +253,7 @@ if __name__ == "__main__":
             TOWER_HP_BOXES[i][1] = (x1, y1-PRINCESS_Y_OFFSET, x2, y2-PRINCESS_Y_OFFSET)
 
 
-    OUTPUT = "./output/debug/single_deck_bot___"
+    OUTPUT = f"./output/debug/single_deck_bot_{id}"
     if not os.path.exists(OUTPUT):
         os.makedirs(OUTPUT)
         os.makedirs(f"{OUTPUT}/raw")
@@ -275,31 +275,17 @@ if __name__ == "__main__":
 
     deck_names = ["minions", "giant", "speargoblins", "musketeer", "minipekka", "knight", "archers", "arrows"]
     bot = SingleDeckBot(
-        side="left",
+        team=team,
         unit_model_path="./models/units_singledeck_cpu.onnx",
         number_model_path="./models/number_cpu.onnx",
         side_model_path="./models/side_cpu.onnx",
         deck_names=deck_names,
-        port=5555,
+        port=port,
     )
 
     bot_logger.info(f"Ally units={bot.unit_detector.ally_units}")
 
     font = ImageFont.load_default()
-
-    # class FakeScreen():
-    #     def __init__(self, in_dir):
-    #         self.i = 0
-    #         self.in_dir = in_dir
-    #         self.files = sorted(list(os.listdir(self.in_dir)), key=lambda x: int(x[:-4]))
-
-    #     def take_screenshot(self):
-    #         img = Image.open(os.path.join(self.in_dir, self.files[self.i]), "r")
-    #         self.i += 1
-    #         return img
-        
-    # bot.screen = FakeScreen(r"C:\Users\jurek\Desktop\projects\python\AI-Royale-dev\AIRoyale\data\game_screenshots\game_1")
-
 
     count = 0
     image = bot.screen.take_screenshot()
@@ -428,6 +414,9 @@ if __name__ == "__main__":
     while not bot.is_game_end(image):
         image = bot.screen.take_screenshot()
 
+    time.sleep(3.0)
+    image = bot.screen.take_screenshot()
+
     victory = f"{'victory' if bot.is_victory(image) else 'loss'}"
     print(f"Detected outcome {victory}")
 
@@ -449,3 +438,19 @@ if __name__ == "__main__":
         video.write(img)
     
     video.release()
+
+
+if __name__ == "__main__":
+    # debugging purposes
+    from multiprocessing import Process
+    
+    teams = ["blue", "red"]
+    ports = [5555, 5575]
+    processes = [Process(target=debug, args=(i, teams[i], ports[i])) for i in range(2)]
+
+    for i in range(2):
+        processes[i].start()
+
+    for i in range(2):
+        processes[i].join()
+        processes[i].close()
