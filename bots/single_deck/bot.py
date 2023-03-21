@@ -229,6 +229,7 @@ def debug(id, team, port):
     import os
     import logging
     import time
+    import timeit
 
     import cv2
     from PIL import ImageDraw, ImageFont, Image
@@ -289,12 +290,17 @@ def debug(id, team, port):
     count = 0
     image = bot.screen.take_screenshot()
     width, height = image.size
+    frame_times = []
     while bot.in_game(image):
         image.save(f"{OUTPUT}/raw/img_{count}.png")
 
+        tic = timeit.default_timer()
         state = bot.get_state(image)
-        action = bot.get_actions(state, eps=0.8)
+        action = bot.get_actions(state, eps=1.0)
         bot.play_actions(action)
+        toc = timeit.default_timer()
+
+        frame_times.append(toc - tic)
 
         bot_logger.info(f"[{count}] action={action}, handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}, towers_destroyed={bot.towers_destroyed}, towers_unhit={bot.towers_unhit}")
 
@@ -437,6 +443,13 @@ def debug(id, team, port):
         video.write(img)
     
     video.release()
+
+    fps = np.array(frame_times)
+    max_time = np.max(fps)
+    min_time = np.min(fps)
+    std = np.std(fps)
+    fps = 1 / np.mean(fps)
+    print(f"Mean fps={fps}, std={std:.3f}s | max={max_time:.3f}s, min={min_time:.3f}s")
 
 if __name__ == "__main__":
     # debugging purposes
