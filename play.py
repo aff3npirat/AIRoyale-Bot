@@ -1,6 +1,7 @@
 # Play a bot vs. bot match.
 import os
 import logging
+import subprocess
 from multiprocessing import Process, Queue
 from argparse import ArgumentParser
 
@@ -53,6 +54,10 @@ def main(output, deck_names, ports, unit_model, side_model, number_model, eps):
     SIDES = ["left", "right"]
 
     num_bots = len(ports)
+
+    subprocess.run([r"..\adb\adb.exe", "start-server"])
+    for port in ports:
+        subprocess.run([r"..\adb\adb.exe", "connect", f"localhost:{port}"])
 
     # create bots
     bots = [
