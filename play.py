@@ -53,7 +53,7 @@ def run_bot(
     while bot.in_game(image):
         state = bot.get_state(image)
         actions = bot.get_actions(state, eps=eps)
-        # bot.play_actions(actions)
+        bot.play_actions(actions)
 
         bot.store_experience(state, actions)
 
