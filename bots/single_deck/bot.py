@@ -81,10 +81,10 @@ class SingleDeckBot(BotBase):
         enemy_towers = [0, 3]
         ally_towers = [1, 2]
 
-        damage_reward = 0
+        damage_reward = 0.0
         for idxs, scale in zip([enemy_towers, ally_towers], [20, -30]):
-            damage_reward += scale * torch.sum(prev_hp[idxs]>0.0) - torch.sum(tower_hp[idxs]>0.0)
-            damage_reward += scale * prev_hp[idxs] - tower_hp[idxs]
+            damage_reward += scale * (torch.sum(prev_hp[idxs]>0.0) - torch.sum(tower_hp[idxs]>0.0))
+            damage_reward += scale * torch.sum(prev_hp[idxs] - tower_hp[idxs])
 
         return troop_reward + card_reward + damage_reward
 
