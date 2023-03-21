@@ -10,6 +10,7 @@ import torch
 import timing
 import controller
 from bots.single_deck.bot import SingleDeckBot
+from constants import TOWER_HP_BOXES, PRINCESS_Y_OFFSET
 
 
 
@@ -33,8 +34,11 @@ def run_bot(
     handler_file = logging.FileHandler(os.path.join(output, f"time_{pid}.log"), mode="w+")
     time_logger.addHandler(handler_file)
     time_logger.info("Initialized time logging")
-
     timing.logger = time_logger
+
+    for i, (name, (x1, y1, x2, y2)) in enumerate(TOWER_HP_BOXES):
+        if "princess" in name:
+            TOWER_HP_BOXES[i][1] = (x1, y1-PRINCESS_Y_OFFSET, x2, y2-PRINCESS_Y_OFFSET)
 
     bot = SingleDeckBot(team, unit_model, number_model, side_model, deck_names, king_levels={"ally": 11, "enemy": 11}, port=port)
 
@@ -73,6 +77,7 @@ def main(output, deck_names, ports, unit_model, side_model, number_model, eps):
         subprocess.run([r"..\adb\adb.exe", "connect", f"localhost:{port}"])
 
     # send 1v1 invite
+    print("Sending invites...")
     for i in range(0, num_bots, 2):
         controller.send_clan_1v1(ports[i])
 
@@ -93,7 +98,8 @@ def main(output, deck_names, ports, unit_model, side_model, number_model, eps):
         eps,
         i%2==1
     )) for i in range(num_bots)]
-    
+
+    print("Starting bots...")
     for p in processes:
         p.start()
 
