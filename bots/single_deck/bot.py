@@ -29,8 +29,13 @@ class SingleDeckBot(BotBase):
     Can only see 8 different cards, that are all in his deck.
     """
 
-    def __init__(self, side, unit_model_path, number_model_path, side_model_path, deck_names, hash_size=8, king_levels=None, port=5555):
+    def __init__(self, team, unit_model_path, number_model_path, side_model_path, deck_names, hash_size=8, king_levels=None, port=5555):
         super().__init__(hash_size=hash_size, port=port)
+
+        if team == "blue":
+            side = "left"
+        else:
+            side = "right"
 
         tile_y = 22
         if side == "right":

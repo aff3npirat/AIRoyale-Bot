@@ -13,7 +13,18 @@ from bots.single_deck.bot import SingleDeckBot
 
 
 
-def run_bot(bot, queue, output, eps, accept_invite=False):
+def run_bot(
+    unit_model,
+    side_model,
+    number_model,
+    deck_names,
+    team,
+    port,
+    queue,
+    output,
+    eps,
+    accept_invite=False
+):
     os.makedirs(output, exist_ok=True)
     pid = os.getpid()
 
@@ -25,8 +36,10 @@ def run_bot(bot, queue, output, eps, accept_invite=False):
 
     timing.logger = time_logger
 
+    bot = SingleDeckBot(team, unit_model, number_model, side_model, deck_names, king_levels={"ally": 11, "enemy": 11}, port=port)
+
     if accept_invite:
-        controller.accept_invite(bot.screen.port)
+        controller.accept_invite(port)
 
     image = bot.screen.take_screenshot()
     while not bot.in_game(image):
@@ -51,7 +64,7 @@ def run_bot(bot, queue, output, eps, accept_invite=False):
 
 
 def main(output, deck_names, ports, unit_model, side_model, number_model, eps):
-    SIDES = ["left", "right"]
+    TEAMS = ["blue", "red"]
 
     num_bots = len(ports)
 
@@ -59,22 +72,28 @@ def main(output, deck_names, ports, unit_model, side_model, number_model, eps):
     for port in ports:
         subprocess.run([r"..\adb\adb.exe", "connect", f"localhost:{port}"])
 
-    # create bots
-    bots = [
-        SingleDeckBot(SIDES[i%2], unit_model, number_model, side_model, deck_names, king_levels={"ally": 11, "enemy": 11}, port=ports[i])
-        for i in range(num_bots)
-    ]
-
     # send 1v1 invite
     for i in range(0, num_bots, 2):
-        controller.send_clan_1v1(bots[i].screen.port)
+        controller.send_clan_1v1(ports[i])
 
     # start thread for each bot
+    # create bots
     # accept invite
     # start state-action-play loop, while recording experience in replay buffer
     # on loop end: extract rewards from replay buffer
     out_queue = Queue()
-    processes = [Process(target=run_bot, args=(bots[i], out_queue, output, eps, i%2==1)) for i in range(num_bots)]
+    processes = [Process(target=run_bot, args=(unit_model,
+        side_model,
+        number_model,
+        deck_names,
+        TEAMS[i],
+        ports[i],
+        out_queue,
+        output,
+        eps,
+        i%2==1
+    )) for i in range(num_bots)]
+    
     for p in processes:
         p.start()
 
