@@ -4,3 +4,6 @@ torhvision
 onnxruntime
 pillow
 scipy
+torch
+torchvision
+onnxruntime

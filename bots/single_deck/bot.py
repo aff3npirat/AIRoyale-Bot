@@ -454,9 +454,14 @@ def debug(id, team, port):
 if __name__ == "__main__":
     # debugging purposes
     from multiprocessing import Process
+    from argparse import ArgumentParser
     
+    parser = ArgumentParser()
+    parser.add_argument("ports", nargs=2, type=int, default=[5555, 5565])
+    args = parser.parse_args()
+
     teams = ["blue", "red"]
-    ports = [5555, 5575]
+    ports = args.ports
     processes = [Process(target=debug, args=(i, teams[i], ports[i])) for i in range(2)]
 
     for i in range(2):
