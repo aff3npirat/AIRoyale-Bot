@@ -13,6 +13,7 @@ class BotBase:
     def __init__(self, hash_size=8, port=5555):
         self.screen = Screen(port=port)
 
+        self.replay_buffer = []
         self.screen_hashes = {}
         self.hash_size = hash_size
 
@@ -37,6 +38,23 @@ class BotBase:
         y = y + CARD_HEIGHT/2
 
         return x, y
+    
+    @staticmethod
+    def get_reward(*args, **kwargs):
+        raise NotImplementedError
+    
+    @staticmethod
+    def with_reward(episode, victory):
+        """
+        Returns triplets of <state, action, reward>
+        """
+        raise NotImplementedError
+    
+    def store_experience(self, state, actions):
+        """
+        Stores state, actions pair in replay buffer.
+        """
+        raise NotImplementedError
 
     def get_state(self, image):
         """
@@ -44,7 +62,7 @@ class BotBase:
         """
         raise NotImplementedError
     
-    def get_actions(self, state):
+    def get_actions(self, state, eps):
         """
         Choose actions for given state.
         """
@@ -95,18 +113,16 @@ class BotBase:
 
         return diff < thr
     
-    def run(self, auto_play):
-        if auto_play:
-            # navigate from current screen to in game
-            raise NotImplementedError
-        
+    def run(self, eps):
         image = self.screen.take_screenshot()
         while not self.in_game(image):
 
             state = self.get_state(image)
-            actions = self.get_actions(state)
+            actions = self.get_actions(state, eps=eps)
             self.play_actions(actions)
 
             image = self.screen.take_screenshot()
 
         victory = self.is_victory(image)
+
+        return victory

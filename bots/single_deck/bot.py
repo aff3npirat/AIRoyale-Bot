@@ -50,6 +50,43 @@ class SingleDeckBot(BotBase):
         self.towers_unhit = {k: True for k in self.towers_destroyed}
         self.king_levels = king_levels if king_levels is not None else {"ally": 1, "enemy": 1}
 
+    @staticmethod
+    def with_reward(episode, victory):
+        experience = []
+        prev_state, prev_action, prev_N_enemy = episode[0]
+        for exp in episode[1:]:
+            state, action, N_enemy = exp
+
+            reward = SingleDeckBot.get_reward(state, prev_state, prev_action, N_enemy, prev_N_enemy)
+
+            experience.append((prev_state, prev_action, reward, False))
+
+        victory_reward = 20 if victory else -30
+        experience.append((state, action, victory_reward, True))
+
+        return experience
+
+    @staticmethod
+    def get_reward(next_state, state, action, next_N_enemy, N_enemy):
+        troop_reward = max(N_enemy - next_N_enemy, 0) * 2
+        card_reward = -3 if action == -1 else 0
+        
+        tower_hp = next_state[HEALTH_START:HEALTH_END]
+        prev_hp = state[HEALTH_START:HEALTH_END]
+        enemy_towers = [0, 3]
+        ally_towers = [1, 2]
+
+        damage_reward = 0
+        for idxs, scale in zip([enemy_towers, ally_towers], [20, -30]):
+            damage_reward += scale * torch.sum(prev_hp[idxs]>0.0) - torch.sum(tower_hp[idxs]>0.0)
+            damage_reward += scale * prev_hp[idxs] - tower_hp[idxs]
+
+        return troop_reward + card_reward + damage_reward
+
+    def store_experience(self, state, actions):
+        N_enemy = torch.sum(self.board[8:])
+        self.replay_buffer.append((state, actions, N_enemy))
+
     @exec_time
     def _get_context(self, numbers, cards, overtime):
         context = torch.zeros((NEXT_CARD_END), dtype=torch.float32)  # overtime, turret health, elixir, handcards, handcards ready, next handcard
@@ -147,6 +184,7 @@ class SingleDeckBot(BotBase):
         context = self._get_context(numbers, cards, overtime)
 
         board = self._get_board_state(units)
+        self.board = board
         emb = self.board_emb(board)
 
         return torch.cat((emb, context))
@@ -186,7 +224,6 @@ class SingleDeckBot(BotBase):
 if __name__ == "__main__":
     # debugging purposes
     import os
-    import time
     import logging
 
     import cv2
@@ -385,8 +422,6 @@ if __name__ == "__main__":
     print("Detected game end")
     while not bot.is_game_end(image):
         image = bot.screen.take_screenshot()
-
-    time.sleep(2.0)
 
     victory = f"{'victory' if bot.is_victory(image) else 'loss'}"
     print(f"Detected outcome {victory}")
