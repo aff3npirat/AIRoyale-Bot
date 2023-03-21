@@ -225,7 +225,6 @@ class SingleDeckBot(BotBase):
         self.screen.click(*self.place_pos)
     
 
-# debugging
 def debug(id, team, port):
     import os
     import logging
@@ -438,7 +437,6 @@ def debug(id, team, port):
         video.write(img)
     
     video.release()
-
 
 if __name__ == "__main__":
     # debugging purposes
