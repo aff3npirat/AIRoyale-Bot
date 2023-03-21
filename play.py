@@ -88,9 +88,9 @@ def main(output, deck_names, ports, unit_model, side_model, number_model, eps):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("deck", type=str, nargs="8", required=True)
+    parser.add_argument("deck", type=str, nargs=8)
     parser.add_argument("--out", type=str, required=True)
-    parser.add_argument("--ports", type=int, nargs="+", default=[5555, 5565])
+    parser.add_argument("--ports", type=int, nargs="+", default=[5555, 5575])
     parser.add_argument("--unit-model", type=str, default="./models/units_singledeck_cpu.onnx")
     parser.add_argument("--num-model", type=str, default="./models/number_cpu.onnx")
     parser.add_argument("--side-model", type=str, default="./models/side_cpu.onnx")

@@ -13,6 +13,7 @@ class Screen:
         # Physical size: 720x1280 -> self.width = 720, self.height = 1280
         self.adb_exec = adb_path
         self.target = f"localhost:{port}"
+        self.port = port
         window_size = subprocess.check_output([self.adb_exec, '-s', self.target, 'shell', 'wm', 'size'])
         window_size = window_size.decode('ascii').replace('Physical size: ', '')
         self.width, self.height = [int(i) for i in window_size.split('x')]
