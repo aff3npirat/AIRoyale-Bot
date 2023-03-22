@@ -25,7 +25,7 @@ def exec_time(func):
         tic = timeit.default_timer()
         result = func(*args, **kwargs)
         toc = timeit.default_timer()
-        logger.info(f"{name}: {toc - tic}")
+        logger.info(f"<EXEC> {name}: {toc - tic}")
         return result
     return wrapper
 
@@ -43,7 +43,7 @@ def intervall(func):
         if func.tic is None:
             func.tic = timeit.default_timer()
         else:
-            logger.info(f"{name}: {timeit.default_timer() - func.tic}")
+            logger.info(f"<INTERVALL>: {name}: {timeit.default_timer() - func.tic}")
             func.tic = timeit.default_timer()
         return func(*args, **kwargs)
     return wrapper
