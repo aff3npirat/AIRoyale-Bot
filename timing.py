@@ -30,6 +30,25 @@ def exec_time(func):
     return wrapper
 
 
+def intervall(func):
+    name = func.__qualname__
+    if name in _names:
+        module = inspect.getmodule(func)
+        name = f"{module.__name__}.{name}"
+    _names.append(name)
+
+    tic = None
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if tic is None:
+            tic = timeit.default_timer()
+        else:
+            logger.info(f"{name}: {timeit.default_timer() - tic}")
+            tic = timeit.default_timer()
+        return func(*args, **kwargs)
+    return wrapper
+
+
 def summarize_log(log_files, output):
     os.makedirs(output, exist_ok=True)
 

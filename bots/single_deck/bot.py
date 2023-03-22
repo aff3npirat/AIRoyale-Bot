@@ -6,7 +6,7 @@ from state.units import UnitDetector
 from state.cards import BlueCardDetector
 from state.numbers import NumberDetector
 from bots.single_deck.nn import BoardEmbedding, DenseNet
-from timing import exec_time
+from timing import exec_time, intervall
 from constants import TILES_X, TILES_Y
 
 
@@ -224,7 +224,7 @@ class SingleDeckBot(BotBase):
         self.screen.click(x, y)
         self.screen.click(*self.place_pos)
 
-    @exec_time
+    @intervall
     def play_single(self, image, eps):
         state = self.get_state(image)
         action = self.get_actions(state, eps=eps)
