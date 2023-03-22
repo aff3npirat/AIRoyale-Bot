@@ -228,7 +228,7 @@ class SingleDeckBot(BotBase):
     def play_single(self, image, eps):
         state = self.get_state(image)
         action = self.get_actions(state, eps=eps)
-        self.play_action(action)
+        self.play_actions(action)
 
         self.store_experience(state, action)
     
