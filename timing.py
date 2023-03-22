@@ -43,7 +43,7 @@ def intervall(func):
         if func.tic is None:
             func.tic = timeit.default_timer()
         else:
-            logger.info(f"<INTERVALL>: {name}: {timeit.default_timer() - func.tic}")
+            logger.info(f"<INTERVALL> {name}: {timeit.default_timer() - func.tic}")
             func.tic = timeit.default_timer()
         return func(*args, **kwargs)
     return wrapper
