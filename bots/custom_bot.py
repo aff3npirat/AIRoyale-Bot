@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image
 
 from screen import Screen
+from timing import exec_time
 from constants import SCREEN_CONFIG, CONVERSION_MATS, DATA_DIR, CARD_HEIGHT, CARD_WIDTH, CARD_CONFIG
 
 
@@ -74,6 +75,7 @@ class BotBase:
         """
         raise NotImplementedError
     
+    @exec_time
     def detect_game_screen(self, image, screen_key, conversion_mat=None):
         bbox, thr = SCREEN_CONFIG[screen_key]
         actual_hash = self._compute_image_hash(image.crop(bbox), self.hash_size, conversion_mat=conversion_mat)

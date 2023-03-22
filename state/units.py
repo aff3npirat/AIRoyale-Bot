@@ -80,6 +80,7 @@ class UnitDetector(OnnxDetector):
 
         return x, y
 
+    @exec_time
     def run(self, img, conf_thres=0.725, iou_thres=0.5):
         """
         Parameters
