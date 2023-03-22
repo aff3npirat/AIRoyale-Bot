@@ -30,11 +30,13 @@ def exec_time(func):
     return wrapper
 
 
-def summarize_log(log_file, output):
+def summarize_log(log_files, output):
     os.makedirs(output, exist_ok=True)
 
-    with open(log_file, "rt") as f:
-        lines = f.readlines()[1:]
+    lines = []
+    for file in log_files:
+        with open(file, "rt") as f:
+            lines.extend(f.readlines()[1:])
 
     funcs = {}
     for line in lines:
@@ -57,8 +59,8 @@ def summarize_log(log_file, output):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("in-file", type=str)
-    parser.add_argument("output", type=str)
+    parser.add_argument("in-files", type=str, nargs="+")
+    parser.add_argument("--out", type=str, required=True)
     
     args = parser.parse_args()
-    summarize_log(args.in_file, args.output)
+    summarize_log(args.in_files, args.out)
