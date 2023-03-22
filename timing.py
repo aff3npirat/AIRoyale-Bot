@@ -37,13 +37,14 @@ def intervall(func):
         name = f"{module.__name__}.{name}"
     _names.append(name)
 
+    func.tic = None
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if tic is None:
-            tic = timeit.default_timer()
+        if func.tic is None:
+            func.tic = timeit.default_timer()
         else:
-            logger.info(f"{name}: {timeit.default_timer() - tic}")
-            tic = timeit.default_timer()
+            logger.info(f"{name}: {timeit.default_timer() - func.tic}")
+            func.tic = timeit.default_timer()
         return func(*args, **kwargs)
     return wrapper
 
