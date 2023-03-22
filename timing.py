@@ -72,7 +72,7 @@ def summarize_log(log_files, output):
         plt.plot(seconds, ls="--", color="orange")
         plt.axhline(mean, ls="-", color="blue")
         plt.tight_layout()
-        plt.savefig(os.path.join(output, f"{name}.png"))
+        plt.savefig(os.path.join(output, f"{name.replace(' ', '_')}.png"))
         plt.close("all")
 
 
