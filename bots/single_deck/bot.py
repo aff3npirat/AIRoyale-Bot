@@ -170,7 +170,7 @@ class SingleDeckBot(BotBase):
         cards = self.card_detector.run(image)
 
         if numbers["elixir"]["overlapp"]:
-            numbers["elixir"]["number"] = min(numbers["elixir"]["number"]-self.last_expense, 0)
+            numbers["elixir"]["number"] = max(numbers["elixir"]["number"]-self.last_expense, 0)
 
         elixir = numbers["elixir"]["number"]
         for i in range(4):
@@ -382,7 +382,7 @@ def debug(id, team, port):
         assert torch.sum(ready) <= len(deck_ids), "Detected more handcards ready as cards on hand"
         for i in range(len(deck_ids)):
             name = deck_names[int(deck_ids[i].item() - i*8)]
-            slot_idx = bot.handcards.index(name)
+            slot_idx = [card["name"] for card in bot.handcards].index(name)
             ready_ = ready[i]
 
             color = "black" if ready_ else "red"
