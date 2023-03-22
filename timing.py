@@ -37,7 +37,6 @@ def intervall(func):
         name = f"{module.__name__}.{name}"
     _names.append(name)
 
-    tic = None
     @wraps(func)
     def wrapper(*args, **kwargs):
         if tic is None:
