@@ -47,7 +47,9 @@ BBOX_Y_OFFSET = 10  # enlarge bbox from unit detector to ensure healthbar/level 
 ELIXIR_X = 120
 ELIXIR_Y = 635
 ELIXIR_DELTA_X = 25
+ELIXIR_OVERLAPP_BOX = (103, 633, 118, 634)
 ELIXIR_RED_THR = 80
+ELIXIR_GREEN_THR = 230
 
 PRINCESS_Y_OFFSET = 3  # used in clan 1v1s
 HP_HEIGHT = 12

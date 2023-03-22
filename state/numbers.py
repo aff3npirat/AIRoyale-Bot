@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from constants import NUMBER_WIDTH, NUMBER_HEIGHT, TOWER_HP_BOXES, KING_HP, PRINCESS_HP, ELIXIR_RED_THR, ELIXIR_DELTA_X, ELIXIR_X, ELIXIR_Y
+from constants import NUMBER_WIDTH, NUMBER_HEIGHT, TOWER_HP_BOXES, KING_HP, PRINCESS_HP, ELIXIR_RED_THR, ELIXIR_DELTA_X, ELIXIR_X, ELIXIR_Y, ELIXIR_OVERLAPP_BOX, ELIXIR_GREEN_THR
 from state.onnx_detector import OnnxDetector
 from timing import exec_time
 
@@ -15,13 +15,15 @@ class NumberDetector(OnnxDetector):
 
     @staticmethod
     def calculate_elixir(image):
-        vals = np.array(image.crop(ELIXIR_BBOX))[0, ELIXIR_POINTS, 0]  # only interested in red channel
-        m = (vals>ELIXIR_RED_THR)
+        elixir_points = np.array(image.crop(ELIXIR_BBOX))[0, ELIXIR_POINTS, 0]
+        m = (elixir_points>ELIXIR_RED_THR)
 
         elixir = 10
         if not m.all():
             elixir = np.argmin(m)
-        return elixir
+
+        overlapp_val = np.array(image.crop(ELIXIR_OVERLAPP_BOX))[..., 1].mean()
+        return elixir, overlapp_val>ELIXIR_GREEN_THR
     
     @staticmethod
     def relative_tower_hp(pred, king_level):
@@ -89,7 +91,9 @@ class NumberDetector(OnnxDetector):
         pred = self.post_process(pred, TOWER_HP_BOXES)
 
         # Elixir
+        elixir, overlapp = self.calculate_elixir(image)
         pred['elixir'] = {'confidence': 1.0,
-                          'number': self.calculate_elixir(image)}
+                          'number': elixir,
+                          'overlapp': overlapp}
         return pred
     

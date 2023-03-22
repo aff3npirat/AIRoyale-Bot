@@ -169,6 +169,9 @@ class SingleDeckBot(BotBase):
         numbers = self.number_detector.run(image)
         cards = self.card_detector.run(image)
 
+        if numbers["elixir"]["overlapp"]:
+            numbers["elixir"]["number"] = min(numbers["elixir"]["number"]-self.last_expense, 0)
+
         elixir = numbers["elixir"]["number"]
         for i in range(4):
             cards[i+1]["ready"] = (cards[i+1]["cost"]<=elixir)
@@ -187,7 +190,7 @@ class SingleDeckBot(BotBase):
 
         overtime = self.detect_game_screen(image, "overtime")
 
-        self.handcards = [x["name"] for x in cards[1:]]
+        self.handcards = cards[1:]
         context = self._get_context(numbers, cards, overtime)
 
         board = self._get_board_state(units)
@@ -214,12 +217,15 @@ class SingleDeckBot(BotBase):
             return -1
         
         action -= 1
-        slot_idx = self.handcards.index(self.sorted_handcards[action]["name"])
+        names = [card["name"] for card in self.handcards]
+        slot_idx = names.index(self.sorted_handcards[action]["name"])
         return slot_idx
     
     def play_actions(self, actions):
         if actions == -1:
             return
+        
+        self.last_expense = self.handcards[actions]["cost"]
         
         self.screen.select_place_unit(actions, self.side)
 
@@ -271,13 +277,7 @@ def debug(id, team, port):
     bot_logger.addHandler(handler_file)
     bot_logger.info("Initialized bot logging")
 
-    time_logger = logging.getLogger("time")
-    time_logger.setLevel(logging.INFO)
-    handler_file = logging.FileHandler(os.path.join(OUTPUT, "time.log"), mode="w+")
-    time_logger.addHandler(handler_file)
-    time_logger.info("Initialized time logging")
-
-    timing.logger = time_logger
+    timing.init_logging(os.path.join(OUTPUT, "time.log"))
 
 
     deck_names = ["minions", "giant", "speargoblins", "musketeer", "minipekka", "knight", "archers", "arrows"]
