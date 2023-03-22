@@ -59,8 +59,8 @@ def summarize_log(log_files, output):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("in-files", type=str, nargs="+")
+    parser.add_argument("files", type=str, nargs="+")
     parser.add_argument("--out", type=str, required=True)
     
     args = parser.parse_args()
-    summarize_log(args.in_files, args.out)
+    summarize_log(args.files, args.out)
