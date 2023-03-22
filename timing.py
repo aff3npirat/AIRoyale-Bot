@@ -1,6 +1,7 @@
 import os
 import timeit
 import inspect
+import logging
 from argparse import ArgumentParser
 from functools import wraps
 
@@ -8,12 +9,26 @@ import matplotlib.pyplot as plt
 
 
 
-logger = None
+_enabled = ("BENCHMARK" in os.environ) and (os.environ["BENCHMARK"]=="1")
+
+def init_logging(file):
+    if _enabled:
+        time_logger = logging.getLogger("time")
+        time_logger.setLevel(logging.INFO)
+        handler_file = logging.FileHandler(file, mode="w+")
+        time_logger.addHandler(handler_file)
+        time_logger.info("Initialized time logging")
+
+        global logger
+        logger = time_logger
 
 _names = []
 
 
 def exec_time(func):
+    if not _enabled:
+        return func
+
     name = func.__qualname__
     if name in _names:
         module = inspect.getmodule(func)
@@ -31,6 +46,9 @@ def exec_time(func):
 
 
 def intervall(func):
+    if not _enabled:
+        return func
+
     name = func.__qualname__
     if name in _names:
         module = inspect.getmodule(func)

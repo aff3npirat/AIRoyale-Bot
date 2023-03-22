@@ -28,14 +28,9 @@ def run_bot(
     accept_invite=False
 ):
     os.makedirs(output, exist_ok=True)
-    pid = os.getpid()
 
-    time_logger = logging.getLogger("time")
-    time_logger.setLevel(logging.INFO)
-    handler_file = logging.FileHandler(os.path.join(output, f"time_{pid}.log"), mode="w+")
-    time_logger.addHandler(handler_file)
-    time_logger.info("Initialized time logging")
-    timing.logger = time_logger
+    pid = os.getpid()
+    timing.init_logging(os.path.join(output, f"time_{pid}.log"))
 
     for i, (name, (x1, y1, x2, y2)) in enumerate(TOWER_HP_BOXES):
         if "princess" in name:
