@@ -37,6 +37,8 @@ class SingleDeckBot(BotBase):
         else:
             side = "right"
 
+        self.side = side
+
         tile_y = 22
         if side == "right":
             tile_x = 14
@@ -218,11 +220,8 @@ class SingleDeckBot(BotBase):
     def play_actions(self, actions):
         if actions == -1:
             return
-
-        x, y = self.slot_to_xy(actions)
-
-        self.screen.click(x, y)
-        self.screen.click(*self.place_pos)
+        
+        self.screen.select_place_unit(actions, self.side)
 
     @intervall
     def play_single(self, image, eps):
