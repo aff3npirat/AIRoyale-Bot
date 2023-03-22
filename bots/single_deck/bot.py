@@ -39,13 +39,15 @@ class SingleDeckBot(BotBase):
 
         self.side = side
 
-        tile_y = 22
-        if side == "right":
-            tile_x = 14
-        else:
-            tile_x = 3
+        # tile_y = 22
+        # if side == "right":
+        #     tile_x = 14
+        # else:
+        #     tile_x = 3
 
-        self.place_pos = UnitDetector.tile_to_xy(tile_x, tile_y)
+        # self.place_pos = UnitDetector.tile_to_xy(tile_x, tile_y)
+
+        deck_names = sorted(deck_names)
 
         self.unit_detector = UnitDetector(unit_model_path, side_model_path, [i for i in range(8)])
         self.number_detector = NumberDetector(number_model_path)
