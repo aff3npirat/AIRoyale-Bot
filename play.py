@@ -1,6 +1,5 @@
 # Play a bot vs. bot match.
 import os
-import logging
 import time
 import subprocess
 from multiprocessing import Process, Queue
@@ -10,6 +9,7 @@ import torch
 
 import timing
 import controller
+from utils import seed_all
 from bots.single_deck.bot import SingleDeckBot
 from constants import TOWER_HP_BOXES, PRINCESS_Y_OFFSET
 
@@ -31,6 +31,8 @@ def run_bot(
 
     pid = os.getpid()
     timing.init_logging(os.path.join(output, f"time_{pid}.log"))
+
+    seed_all(pid)
 
     for i, (name, (x1, y1, x2, y2)) in enumerate(TOWER_HP_BOXES):
         if "princess" in name:
