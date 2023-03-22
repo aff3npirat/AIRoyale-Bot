@@ -50,8 +50,8 @@ def summarize_log(log_files, output):
     for name, seconds in funcs.items():
         mean = sum(seconds)/len(seconds)
         plt.title(f"{name} | mean={mean:.4E}")
-        plt.plot(seconds, "--", color="orange")
-        plt.axhline(mean, "-", color="blue")
+        plt.plot(seconds, ls="--", color="orange")
+        plt.axhline(mean, ls="-", color="blue")
         plt.tight_layout()
         plt.savefig(os.path.join(output, f"{name}.png"))
         plt.close("all")
