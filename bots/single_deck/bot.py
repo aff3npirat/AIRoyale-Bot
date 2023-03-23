@@ -62,7 +62,7 @@ class SingleDeckBot(BotBase):
         self.king_levels = king_levels if king_levels is not None else {"ally": 1, "enemy": 1}
         
         self.last_expense = 0
-        self.approx_time = 0
+        self.approx_time = 10
         self.tic = None
 
     @staticmethod
