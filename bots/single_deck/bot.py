@@ -103,8 +103,8 @@ class SingleDeckBot(BotBase):
         self.replay_buffer.append((state, actions, N_enemy))
 
     @exec_time
-    def _get_context(self, numbers, cards, overtime):
-        context = torch.zeros((NEXT_CARD_END), dtype=torch.float32)  # overtime, turret health, elixir, handcards, handcards ready, next handcard
+    def _get_context(self, numbers, cards):
+        context = torch.zeros((NEXT_CARD_END), dtype=torch.float32)  # time, turret health, elixir, handcards, handcards ready, next handcard
 
         rem_time = numbers["time"]["number"]
         if rem_time >= 0:
@@ -227,7 +227,7 @@ class SingleDeckBot(BotBase):
         NumberDetector.relative_tower_hp(numbers, king_level=self.king_levels)
 
         self.handcards = cards[1:]
-        context = self._get_context(numbers, cards, overtime)
+        context = self._get_context(numbers, cards)
 
         board = self._get_board_state(units)
         self.board = board
@@ -341,7 +341,7 @@ def debug(id, team, port):
         action = bot.get_actions(state, eps=1.0)
         # bot.play_actions(action)
 
-        bot_logger.info(f"[{count}] action={action}, handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}, towers_destroyed={bot.towers_destroyed}, towers_unhit={bot.towers_unhit}")
+        bot_logger.info(f"[{count}] action={action}, handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}, towers_destroyed={bot.towers_destroyed}, towers_unhit={bot.towers_unhit}, approx_time={bot.approx_time}, last_expense={bot.last_expense}, elixir={bot.elixir}")
 
         units = bot.unit_detector.run(image)
         numbers = bot.number_detector.run(image)
@@ -385,9 +385,9 @@ def debug(id, team, port):
 
         draw = ImageDraw.Draw(image)
 
-        draw.text((width-50, 50), f"{count}", fill="black", font=font)
+        draw.text((width-50, 60), f"{count}", fill="black", font=font)
 
-        # draw normed time time
+        # draw normed time
         time_ = context[REMAINING_TIME]
         draw.text((307, 40), f"{time_:.3f}", fill="black", font=font, anchor="lt")
 
