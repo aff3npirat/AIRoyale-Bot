@@ -34,6 +34,8 @@ class Screen:
 
     @exec_time
     def select_place_unit(self, slot_idx, side):
+        assert 0 <= slot_idx <= 3, slot_idx
+
         select = f"dd bs=160 if=/mnt/sdcard/slot{slot_idx+1} of=/dev/input/event5"
         wait = "busybox usleep 20000"
         place = f"dd bs=160 if=/mnt/sdcard/tile_{side} of=/dev/input/event5"
