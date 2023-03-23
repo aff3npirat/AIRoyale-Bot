@@ -1,3 +1,5 @@
+import timeit
+
 import torch
 import numpy as np
 
@@ -12,8 +14,8 @@ from constants import TILES_X, TILES_Y
 
 
 EMB_SIZE = 512
-OVERTIME = 0
-HEALTH_START = OVERTIME + 1
+REMAINING_TIME = 0
+HEALTH_START = REMAINING_TIME + 1
 HEALTH_END = HEALTH_START + 4
 ELIXIR = HEALTH_END
 CARDS_START = ELIXIR + 1
@@ -58,7 +60,10 @@ class SingleDeckBot(BotBase):
         self.towers_destroyed = {k: False for k in ["enemy_king_hp", "ally_king_hp", f"{side}_ally_princess_hp", f"{side}_enemy_princess_hp"]}
         self.towers_unhit = {k: True for k in self.towers_destroyed}
         self.king_levels = king_levels if king_levels is not None else {"ally": 1, "enemy": 1}
+        
         self.last_expense = 0
+        self.approx_time = 0
+        self.tic = None
 
     @staticmethod
     def with_reward(episode, victory):
@@ -101,7 +106,12 @@ class SingleDeckBot(BotBase):
     def _get_context(self, numbers, cards, overtime):
         context = torch.zeros((NEXT_CARD_END), dtype=torch.float32)  # overtime, turret health, elixir, handcards, handcards ready, next handcard
 
-        context[OVERTIME] = 1.0 if overtime else 0.0
+        rem_time = numbers["time"]["number"]
+        if rem_time >= 0:
+            rem_time /= 180
+        else:
+            rem_time /= 120
+        context[REMAINING_TIME] = rem_time
 
         for i, name in enumerate(self.towers_destroyed):
             if self.towers_destroyed[name]:
@@ -168,13 +178,37 @@ class SingleDeckBot(BotBase):
     @exec_time
     @torch.no_grad()
     def get_state(self, image):
+        if self.tic is None:
+            seconds_elapsed = 0
+        else:
+            seconds_elapsed = timeit.default_timer() - self.tic
+        
+        self.approx_time += seconds_elapsed
+        self.tic = timeit.default_timer()
+
         units = self.unit_detector.run(image)  # label, tile, side
         numbers = self.number_detector.run(image)
         cards = self.card_detector.run(image)
-        self.handcards = cards[1:]
+        
+        overtime = self.detect_game_screen(image, "overtime")
+
+        remaining_seconds = numbers["time"]["number"]
+        if remaining_seconds == -1:
+            remaining_seconds = 180 - self.approx_time
+        elif overtime:
+            remaining_seconds -= 121
+
+        numbers["time"]["number"] = remaining_seconds
+
+        elixir_gain = 2.8
+        if 0 <= remaining_seconds <= 60:
+            elixir_gain /= 2
+        elif remaining_seconds <= -61:
+            elixir_gain /= 3
 
         if self.last_expense > 0:
-            self.elixir -= self.last_expense
+            self.elixir = self.elixir - self.last_expense + elixir_gain*seconds_elapsed
+            self.elixir = int(self.elixir)
         else:
             self.elixir = numbers["elixir"]["number"]
         for i in range(4):
@@ -192,8 +226,7 @@ class SingleDeckBot(BotBase):
 
         NumberDetector.relative_tower_hp(numbers, king_level=self.king_levels)
 
-        overtime = self.detect_game_screen(image, "overtime")
-
+        self.handcards = cards[1:]
         context = self._get_context(numbers, cards, overtime)
 
         board = self._get_board_state(units)
@@ -306,7 +339,7 @@ def debug(id, team, port):
 
         state = bot.get_state(image)
         action = bot.get_actions(state, eps=1.0)
-        bot.play_actions(action)
+        # bot.play_actions(action)
 
         bot_logger.info(f"[{count}] action={action}, handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}, towers_destroyed={bot.towers_destroyed}, towers_unhit={bot.towers_unhit}")
 
@@ -333,6 +366,12 @@ def debug(id, team, port):
 
             draw_.text((x1, y1-10), num, fill="black", font=font, anchor="lb")
 
+        # draw absolute time
+        time_ = numbers["time"]["number"]
+        minutes = time_ // 60
+        seconds = time_ % 60
+        draw_.text((307, 40), f"{minutes}:{seconds}", fill="black", font=font, anchor="lt")
+
         # final image will contain bot view and unit detector view
         conc_img = Image.new("RGB", (width*2, height))
         conc_img.paste(image_, (width, 0))
@@ -348,9 +387,12 @@ def debug(id, team, port):
 
         draw.text((width-50, 50), f"{count}", fill="black", font=font)
 
+        # draw normed time time
+        time_ = context[REMAINING_TIME]
+        draw.text((307, 40), f"{time_:.3f}", fill="black", font=font, anchor="lt")
+
         # draw overtime
-        overtime = context[OVERTIME]
-        draw.text((307, 40), f"{'overtime' if overtime else 'normal'}", fill="black", font=font, anchor="lt")
+        draw.text((307, 50), f"{'overtime' if time_ < 0 else 'normal'}", fill="black", font=font, anchor="lt")
 
         # draw health
         nums = context[HEALTH_START:HEALTH_END]
