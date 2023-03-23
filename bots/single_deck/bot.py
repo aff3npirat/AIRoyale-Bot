@@ -298,7 +298,6 @@ def debug(id, team, port):
     count = 0
     image = bot.screen.take_screenshot()
     width, height = image.size
-    frame_times = []
     while bot.in_game(image):
         image.save(f"{OUTPUT}/raw/img_{count}.png")
 
@@ -454,7 +453,7 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
     
     parser = ArgumentParser()
-    parser.add_argument("ports", nargs=2, type=int, default=[5555, 5565])
+    parser.add_argument("--ports", nargs=2, type=int, default=[5555, 5565])
     args = parser.parse_args()
 
     teams = ["blue", "red"]
