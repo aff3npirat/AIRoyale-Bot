@@ -5,6 +5,7 @@ from PIL import Image
 
 from screen import Screen
 from timing import exec_time
+from utils import compute_image_hash
 from constants import SCREEN_CONFIG, DATA_DIR, CARD_HEIGHT, CARD_WIDTH, CARD_CONFIG
 
 
@@ -23,13 +24,7 @@ class BotBase:
                 if key == "in_game":
                     I = Image.fromarray(np.array(I)[..., 0])
 
-                self.screen_hashes[key] = BotBase._compute_image_hash(I, self.hash_size)
-
-    @staticmethod
-    def _compute_image_hash(image, hash_size):
-        image_hash = image.resize((hash_size, hash_size), Image.Resampling.BILINEAR).convert("L")
-        image_hash = np.array(image_hash, dtype=float).flatten()
-        return image_hash
+                self.screen_hashes[key] = compute_image_hash(I, self.hash_size)
     
     @staticmethod
     def slot_to_xy(slot):
@@ -77,7 +72,7 @@ class BotBase:
     @exec_time
     def detect_game_screen(self, image, screen_key):
         bbox, thr = SCREEN_CONFIG[screen_key]
-        actual_hash = self._compute_image_hash(image.crop(bbox), self.hash_size)
+        actual_hash = compute_image_hash(image.crop(bbox), self.hash_size)
 
         diff = np.mean(np.abs(self.screen_hashes[screen_key] - actual_hash))
 
@@ -108,7 +103,7 @@ class BotBase:
         crop[mask] = 0
         crop[~mask] = 255
 
-        actual_hash = self._compute_image_hash(Image.fromarray(crop), self.hash_size)
+        actual_hash = compute_image_hash(Image.fromarray(crop), self.hash_size)
         diff = np.mean(np.abs(self.screen_hashes["victory"] - actual_hash))
 
         return diff < thr
