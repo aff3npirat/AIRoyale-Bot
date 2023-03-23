@@ -1,4 +1,4 @@
-import timeit
+import time
 
 import torch
 import numpy as np
@@ -124,7 +124,7 @@ class SingleDeckBot(BotBase):
             context[HEALTH_START + i] = hp
 
 
-        context[ELIXIR] = self.elixir
+        context[ELIXIR] = int(self.elixir)
 
 
         handcards = sorted(filter(lambda x: x["deck_id"] >= 0, cards[1:]), key=lambda x: x["deck_id"])
@@ -181,10 +181,10 @@ class SingleDeckBot(BotBase):
         if self.tic is None:
             seconds_elapsed = 0
         else:
-            seconds_elapsed = timeit.default_timer() - self.tic
+            seconds_elapsed = time.time() - self.tic
+        self.tic = time.time()
         
         self.approx_time += seconds_elapsed
-        self.tic = timeit.default_timer()
 
         units = self.unit_detector.run(image)  # label, tile, side
         numbers = self.number_detector.run(image)
@@ -200,15 +200,14 @@ class SingleDeckBot(BotBase):
 
         numbers["time"]["number"] = remaining_seconds
 
-        elixir_gain = 2.8
+        elixir_gain = 2.8  # seconds per elixir
         if 0 <= remaining_seconds <= 60:
             elixir_gain /= 2
         elif remaining_seconds <= -61:
             elixir_gain /= 3
 
         if self.last_expense > 0:
-            self.elixir = self.elixir - self.last_expense + elixir_gain*seconds_elapsed
-            self.elixir = int(self.elixir)
+            self.elixir = self.elixir - self.last_expense + seconds_elapsed/elixir_gain
         else:
             self.elixir = numbers["elixir"]["number"]
         for i in range(4):
@@ -331,15 +330,18 @@ def debug(id, team, port):
 
     font = ImageFont.load_default()
 
-    count = 0
     image = bot.screen.take_screenshot()
+    while not bot.in_game(image):
+        image = bot.screen.take_screenshot()
+
+    count = 0
     width, height = image.size
     while bot.in_game(image):
         image.save(f"{OUTPUT}/raw/img_{count}.png")
 
         state = bot.get_state(image)
         action = bot.get_actions(state, eps=1.0)
-        # bot.play_actions(action)
+        bot.play_actions(action)
 
         bot_logger.info(f"[{count}] action={action}, handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}, towers_destroyed={bot.towers_destroyed}, towers_unhit={bot.towers_unhit}, approx_time={bot.approx_time}, last_expense={bot.last_expense}, elixir={bot.elixir}")
 
@@ -368,9 +370,13 @@ def debug(id, team, port):
 
         # draw absolute time
         time_ = numbers["time"]["number"]
-        minutes = time_ // 60
-        seconds = time_ % 60
-        draw_.text((307, 40), f"{minutes}:{seconds}", fill="black", font=font, anchor="lt")
+        if time_ >= 0:
+            minutes = time_ // 60
+            seconds = time_ % 60
+            draw_.text((307, 40), f"{minutes}:{0 if seconds <= 9 else ''}{seconds}", fill="black", font=font, anchor="lt")
+        else:
+            draw_.text((307, 40), f"{time_}", fill="black", font=font, anchor="lt")
+
 
         # final image will contain bot view and unit detector view
         conc_img = Image.new("RGB", (width*2, height))
