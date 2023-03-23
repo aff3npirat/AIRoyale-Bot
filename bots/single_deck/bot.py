@@ -282,6 +282,7 @@ def debug(id, team, port):
 
 
     deck_names = ["minions", "giant", "speargoblins", "musketeer", "minipekka", "knight", "archers", "arrows"]
+    deck_names = sorted(deck_names)
     bot = SingleDeckBot(
         team=team,
         unit_model_path="./models/units_singledeck_cpu.onnx",
@@ -449,20 +450,15 @@ def debug(id, team, port):
 
 if __name__ == "__main__":
     # debugging purposes
-    from multiprocessing import Process
     from argparse import ArgumentParser
     
     parser = ArgumentParser()
-    parser.add_argument("--ports", nargs=2, type=int, default=[5555, 5565])
+    parser.add_argument("--port", nargs=1, type=int, default=5555)
+    parser.add_argument("--team", type=str, default="blue")
+    parser.add_argument("--id", type=str, default="")
     args = parser.parse_args()
 
-    teams = ["blue", "red"]
-    ports = args.ports
-    processes = [Process(target=debug, args=(i, teams[i], ports[i])) for i in range(2)]
-
-    for i in range(2):
-        processes[i].start()
-
-    for i in range(2):
-        processes[i].join()
-        processes[i].close()
+    port = args.port
+    team = args.team
+    id_ = args.id
+    debug(id_, team, port)
