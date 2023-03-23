@@ -76,7 +76,7 @@ def main(output, deck_names, ports, unit_model, side_model, number_model, eps):
     for p in processes:
         p.start()
 
-    # save experience
+    # extract experience from each bot
     experiences = []
     for _ in range(num_bots):
         experiences.extend(out_queue.get())
