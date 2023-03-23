@@ -35,7 +35,7 @@ def send_clan_1v1(port):
 
 
 def exit_game(screen):
-    x, y, w, h = SCREEN_CONFIG["in_game"][0]
+    x, y, w, h = SCREEN_CONFIG["game_end"][0]
     x, y = x + w/2, y + h/2
 
     screen.click(x, y)
