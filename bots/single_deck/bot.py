@@ -58,6 +58,7 @@ class SingleDeckBot(BotBase):
         self.towers_destroyed = {k: False for k in ["enemy_king_hp", "ally_king_hp", f"{side}_ally_princess_hp", f"{side}_enemy_princess_hp"]}
         self.towers_unhit = {k: True for k in self.towers_destroyed}
         self.king_levels = king_levels if king_levels is not None else {"ally": 1, "enemy": 1}
+        self.last_expense = 0
 
     @staticmethod
     def with_reward(episode, victory):
@@ -113,7 +114,7 @@ class SingleDeckBot(BotBase):
             context[HEALTH_START + i] = hp
 
 
-        context[ELIXIR] = numbers["elixir"]["number"]
+        context[ELIXIR] = self.elixir
 
 
         handcards = sorted(filter(lambda x: x["deck_id"] >= 0, cards[1:]), key=lambda x: x["deck_id"])
@@ -170,13 +171,14 @@ class SingleDeckBot(BotBase):
         units = self.unit_detector.run(image)  # label, tile, side
         numbers = self.number_detector.run(image)
         cards = self.card_detector.run(image)
+        self.handcards = cards[1:]
 
-        if numbers["elixir"]["overlapp"]:
-            numbers["elixir"]["number"] = max(numbers["elixir"]["number"]-self.last_expense, 0)
-
-        elixir = numbers["elixir"]["number"]
+        if self.last_expense > 0:
+            self.elixir -= self.last_expense
+        else:
+            self.elixir = numbers["elixir"]["number"]
         for i in range(4):
-            cards[i+1]["ready"] = (cards[i+1]["cost"]<=elixir)
+            cards[i+1]["ready"] = (cards[i+1]["cost"]<=self.elixir)
 
         if numbers["enemy_king_hp"]["number"] == 1 and self.towers_unhit["enemy_king_hp"]:
             numbers["enemy_king_hp"]["number"] = -1
@@ -192,7 +194,6 @@ class SingleDeckBot(BotBase):
 
         overtime = self.detect_game_screen(image, "overtime")
 
-        self.handcards = cards[1:]
         context = self._get_context(numbers, cards, overtime)
 
         board = self._get_board_state(units)
@@ -225,6 +226,7 @@ class SingleDeckBot(BotBase):
     
     def play_actions(self, actions):
         if actions == -1:
+            self.last_expense = 0
             return
         
         self.last_expense = self.handcards[actions]["cost"]
