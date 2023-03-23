@@ -9,15 +9,6 @@ SCREEN_CONFIG = {
     "overtime": ((315, 8, 359, 13), 15)
 }
 
-CONVERSION_MATS = {
-    "in_game": (
-        (0, 0, 0, 0),
-        (0, 0, 0, 0),
-        (0, 0, 1, 0),
-        (0, 0, 0, 0)
-    )
-}
-
 # navigation
 CLAN_MATCH = (152, 547)
 CLAN_1V1 = (180, 468)

@@ -19,16 +19,15 @@ class BotBase:
         self.hash_size = hash_size
 
         for key in SCREEN_CONFIG:
-            mat = None
-            if key in CONVERSION_MATS:
-                mat = CONVERSION_MATS[key]
             with Image.open(os.path.join(DATA_DIR, f"images/screens/{key}.png"), mode="r") as I:
-                self.screen_hashes[key] = BotBase._compute_image_hash(I, self.hash_size, conversion_mat=mat)
+                if key == "in_game":
+                    I = Image.fromarray(np.array(I)[..., 0])
+
+                self.screen_hashes[key] = BotBase._compute_image_hash(I, self.hash_size)
 
     @staticmethod
-    def _compute_image_hash(image, hash_size, conversion_mat=None):
-        mode = "L" if conversion_mat is None else None
-        image_hash = image.resize((hash_size, hash_size), Image.Resampling.BILINEAR).convert(mode=mode, matrix=conversion_mat)
+    def _compute_image_hash(image, hash_size):
+        image_hash = image.resize((hash_size, hash_size), Image.Resampling.BILINEAR).convert("L")
         image_hash = np.array(image_hash, dtype=float).flatten()
         return image_hash
     
@@ -76,9 +75,9 @@ class BotBase:
         raise NotImplementedError
     
     @exec_time
-    def detect_game_screen(self, image, screen_key, conversion_mat=None):
+    def detect_game_screen(self, image, screen_key):
         bbox, thr = SCREEN_CONFIG[screen_key]
-        actual_hash = self._compute_image_hash(image.crop(bbox), self.hash_size, conversion_mat=conversion_mat)
+        actual_hash = self._compute_image_hash(image.crop(bbox), self.hash_size)
 
         diff = np.mean(np.abs(self.screen_hashes[screen_key] - actual_hash))
 
@@ -94,9 +93,8 @@ class BotBase:
         """
         Returns True when not in game.
         """
-        conversion_matrix = np.zeros((4, 4))
-        conversion_matrix[2, 2] = 1.0
-        return self.detect_game_screen(image, "in_game", conversion_mat=conversion_matrix)
+        image = Image.fromarray(np.array(image)[..., 0])
+        return self.detect_game_screen(image, "in_game")
     
     def is_victory(self, image):
         """
@@ -115,5 +113,5 @@ class BotBase:
 
         return diff < thr
     
-    def play_single(self, image, eps):
+    def run(self, *args, **kwargs):
         raise NotImplementedError
