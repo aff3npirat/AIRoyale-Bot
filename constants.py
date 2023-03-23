@@ -1,4 +1,5 @@
 DATA_DIR = "./data/"
+ADB_PATH = r"..\adb\adb.exe"
 
 # game screens
 SCREEN_CONFIG = {

@@ -11,7 +11,7 @@ import timing
 import controller
 from utils import seed_all
 from bots.single_deck.bot import SingleDeckBot
-from constants import TOWER_HP_BOXES, PRINCESS_Y_OFFSET
+from constants import TOWER_HP_BOXES, PRINCESS_Y_OFFSET, ADB_PATH
 
 
 
@@ -54,21 +54,14 @@ def main(output, deck_names, ports, unit_model, side_model, number_model, eps):
 
     num_bots = len(ports)
 
-    subprocess.run([r"..\adb\adb.exe", "start-server"])
-    for port in ports:
-        subprocess.run([r"..\adb\adb.exe", "connect", f"localhost:{port}"])
-
     # send 1v1 invite
     for i in range(0, num_bots, 2):
         controller.send_clan_1v1(ports[i])
 
-    # start thread for each bot
-    # create bots
-    # accept invite
-    # start state-action-play loop, while recording experience in replay buffer
-    # on loop end: extract rewards from replay buffer
+    # start processes
     out_queue = Queue()
-    processes = [Process(target=run_bot, args=(unit_model,
+    processes = [Process(target=run_bot, args=(
+        unit_model,
         side_model,
         number_model,
         deck_names,
@@ -83,7 +76,7 @@ def main(output, deck_names, ports, unit_model, side_model, number_model, eps):
     for p in processes:
         p.start()
 
-    # save on disk
+    # save experience
     experiences = []
     for _ in range(num_bots):
         experiences.extend(out_queue.get())
@@ -108,6 +101,11 @@ if __name__ == "__main__":
 
     if len(args.ports)%2 == 1:
         raise ValueError(f"Number of ports must be multiplicative of 2, got {len(args.ports)}")
+    
+    # initialize adb
+    subprocess.run(f"{ADB_PATH} start-server")
+    for port in args.ports:
+        subprocess.run(f"{ADB_PATH} connect localhost:{port}")
 
     main(
         output=args.out,
