@@ -5,7 +5,7 @@ from PIL import Image
 
 from screen import Screen
 from timing import exec_time
-from constants import SCREEN_CONFIG, CONVERSION_MATS, DATA_DIR, CARD_HEIGHT, CARD_WIDTH, CARD_CONFIG
+from constants import SCREEN_CONFIG, DATA_DIR, CARD_HEIGHT, CARD_WIDTH, CARD_CONFIG
 
 
 
