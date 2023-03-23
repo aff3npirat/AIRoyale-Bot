@@ -41,7 +41,7 @@ def run_bot(
     bot = SingleDeckBot(team, unit_model, number_model, side_model, deck_names, king_levels={"ally": 11, "enemy": 11}, port=port)
 
     if accept_invite:
-        controller.accept_invite(port)
+        controller.accept_invite(bot.screen)
 
     victory = bot.run(eps)
 

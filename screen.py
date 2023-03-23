@@ -13,9 +13,14 @@ class Screen:
         # Physical size: 720x1280 -> self.width = 720, self.height = 1280
         self.target = f"localhost:{port}"
         self.port = port
-        window_size = subprocess.check_output(f"{ADB_PATH} -s {self.target} shell wm size")
+        self.width, self.height = Screen.get_window_size(port)
+
+    @staticmethod
+    def get_window_size(port):
+        window_size = subprocess.check_output(f"{ADB_PATH} -s localhost:{port} shell wm size")
         window_size = window_size.decode('ascii').replace('Physical size: ', '')
-        self.width, self.height = [int(i) for i in window_size.split('x')]
+        width, height = [int(i) for i in window_size.split('x')]
+        return width, height
 
     @exec_time
     def click(self, x, y):

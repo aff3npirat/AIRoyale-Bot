@@ -18,6 +18,11 @@ CONVERSION_MATS = {
     )
 }
 
+# navigation
+CLAN_MATCH = (152, 547)
+CLAN_1V1 = (180, 468)
+CLAN_1V1_ACCEPT = (288, 478)
+
 # screenshot dimensions
 SCREENSHOT_WIDTH = 368
 SCREENSHOT_HEIGHT = 652
