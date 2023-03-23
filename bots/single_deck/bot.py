@@ -176,6 +176,7 @@ class SingleDeckBot(BotBase):
         return board
 
     @exec_time
+    @intervall
     @torch.no_grad()
     def get_state(self, image):
         if self.tic is None:
@@ -265,13 +266,30 @@ class SingleDeckBot(BotBase):
         
         self.screen.select_place_unit(actions, self.side)
 
-    @intervall
-    def play_single(self, image, eps):
-        state = self.get_state(image)
-        action = self.get_actions(state, eps=eps)
-        self.play_actions(action)
+    @exec_time
+    def run(self, eps):
+        image = self.screen.take_screenshot()
+        while not self.in_game(image):
+            image = self.screen.take_screenshot()
 
-        self.store_experience(state, action)
+        while self.in_game(image):
+            state = self.get_state(image)
+            action = self.get_actions(state, eps=eps)
+            self.play_actions(action)
+
+            self.store_experience(state, action)
+
+            image = self.screen.take_screenshot()
+
+        while not self.is_game_end(image):
+            image = self.screen.take_screenshot()
+
+        time.sleep(3.0)
+        image = self.screen.take_screenshot()
+
+        victory = self.is_victory(image)
+
+        return victory
     
 
 def debug(id, team, port):

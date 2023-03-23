@@ -43,22 +43,7 @@ def run_bot(
     if accept_invite:
         controller.accept_invite(port)
 
-    image = bot.screen.take_screenshot()
-    while not bot.in_game(image):
-        image = bot.screen.take_screenshot()
-
-    while bot.in_game(image):
-        bot.play_single(image, eps)
-
-        image = bot.screen.take_screenshot()
-
-    while not bot.is_game_end(image):
-        image = bot.screen.take_screenshot()
-
-    time.sleep(3.0)
-    image = bot.screen.take_screenshot()
-
-    victory = bot.is_victory(image)
+    victory = bot.run(eps)
 
     experience = bot.with_reward(bot.replay_buffer, victory)
     queue.put(experience)
