@@ -9,6 +9,7 @@ from constants import (
     SCREENSHOT_HEIGHT,
     CLAN_1V1,
     CLAN_1V1_ACCEPT,
+    SCREEN_CONFIG
 )
 
 
@@ -31,3 +32,10 @@ def send_clan_1v1(port):
     x, y = CLAN_1V1
     x, y = x / SCREENSHOT_WIDTH * width, y / SCREENSHOT_HEIGHT * height
     subprocess.run(f"{ADB_PATH} -s localhost:{port} shell input tap {x} {y}")
+
+
+def exit_game(screen):
+    x, y, w, h = SCREEN_CONFIG["in_game"][0]
+    x, y = x + w/2, y + h/2
+
+    screen.click(x, y)

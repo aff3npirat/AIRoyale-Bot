@@ -45,6 +45,8 @@ def run_bot(
 
     victory = bot.run(eps)
 
+    controller.exit_game(bot.screen)
+
     experience = bot.with_reward(bot.replay_buffer, victory)
     queue.put(experience)
 
