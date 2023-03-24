@@ -57,6 +57,11 @@ class SingleDeckBot(BotBase):
         self.approx_time = 10
         self.tic = None
 
+    def init_model(self, path):
+        q_net, board_net = torch.load(path)
+        self.Q_net.load_state_dict(q_net)
+        self.board_emb.load_state_dict(board_net)
+
     @staticmethod
     def with_reward(episode, victory):
         experience = []

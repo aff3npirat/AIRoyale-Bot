@@ -5,10 +5,8 @@ import subprocess
 from multiprocessing import Process, Queue
 from argparse import ArgumentParser
 
-import torch
-
 import timing
-from emulator import Controller
+from emulator import Controller, ScreenDetector
 from utils import seed_all
 from bots.single_deck.bot import SingleDeckBot
 from constants import TOWER_HP_BOXES, PRINCESS_Y_OFFSET, ADB_PATH
@@ -25,7 +23,8 @@ def run_bot(
     queue,
     output,
     eps,
-    accept_invite=False
+    accept_invite=False,
+    weights_path=None,
 ):
     os.makedirs(output, exist_ok=True)
 
@@ -40,6 +39,9 @@ def run_bot(
 
     bot = SingleDeckBot(team, unit_model, number_model, side_model, deck_names, king_levels={"ally": 11, "enemy": 11}, port=port)
 
+    if weights_path is not None:
+        bot.init_model(weights_path)
+
     if accept_invite:
         bot.controller.accept_invite()
 
@@ -51,7 +53,7 @@ def run_bot(
     queue.put(experience)
 
 
-def run(output, deck_names, ports, unit_model, side_model, number_model, eps):
+def play_single_game(output, deck_names, ports, unit_model, side_model, number_model, eps, weights_path):
     TEAMS = ["blue", "red"]
 
     num_bots = len(ports)
@@ -72,7 +74,8 @@ def run(output, deck_names, ports, unit_model, side_model, number_model, eps):
         out_queue,
         output,
         eps,
-        i%2==1
+        i%2==1,
+        weights_path,
     )) for i in range(num_bots)]
 
     for p in processes:
@@ -82,11 +85,41 @@ def run(output, deck_names, ports, unit_model, side_model, number_model, eps):
     experiences = []
     for _ in range(num_bots):
         experiences.extend(out_queue.get())
-    torch.save(experiences, os.path.join(output, "experience.pt"))
 
     for p in processes:
         p.join()
         p.close()
+
+    return experiences
+
+
+def run(n_games, output, deck_names, ports, unit_model, side_model, number_model, eps, weights_path):
+    episodes = []
+    for _ in range(n_games):
+        episode = play_single_game(
+            output=output,
+            deck_names=deck_names,
+            unit_model=unit_model,
+            number_model=number_model,
+            side_model=side_model,
+            eps=eps,
+            ports=ports,
+            weights_path=weights_path
+        )
+
+        if n_games == 1:
+            return episode
+
+        episodes.extend(episode)  # list of tuples (state, action, reward, done)
+
+        for port in ports:
+            screen = ScreenDetector(port)
+            controller = Controller(port)
+            img = controller.take_screenshot()
+            while not screen.detect_game_screen(img, "clan"):
+                img = controller.take_screenshot()
+
+    return episodes
 
 
 if __name__ == "__main__":
@@ -98,6 +131,8 @@ if __name__ == "__main__":
     parser.add_argument("--num-model", type=str, default="./models/number_cpu.onnx")
     parser.add_argument("--side-model", type=str, default="./models/side_cpu.onnx")
     parser.add_argument("--eps", type=float, default=0.0)
+    parser.add_argument("--net", type=str, default=None)
+    parser.add_argument("--n", type=int, default=1, help="number of games to play")
 
     args = parser.parse_args()
 
@@ -110,11 +145,13 @@ if __name__ == "__main__":
         subprocess.run(f"{ADB_PATH} connect localhost:{port}")
 
     run(
+        n_games=args.n,
         output=args.out,
         ports=args.ports,
         deck_names=args.deck,
         unit_model=args.unit_model,
         number_model=args.num_model,
         side_model=args.side_model,
-        eps=args.eps
+        eps=args.eps,
+        weights_path=args.net,
     )

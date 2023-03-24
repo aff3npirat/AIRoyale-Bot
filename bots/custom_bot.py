@@ -19,6 +19,9 @@ class BotBase:
 
         return x, y
     
+    def init_model(self, path):
+        raise NotImplementedError
+    
     @staticmethod
     def get_reward(*args, **kwargs):
         raise NotImplementedError
