@@ -41,14 +41,6 @@ class SingleDeckBot(BotBase):
 
         self.side = side
 
-        # tile_y = 22
-        # if side == "right":
-        #     tile_x = 14
-        # else:
-        #     tile_x = 3
-
-        # self.place_pos = UnitDetector.tile_to_xy(tile_x, tile_y)
-
         deck_names = sorted(deck_names)
 
         self.unit_detector = UnitDetector(unit_model_path, side_model_path, [i for i in range(8)])
@@ -191,7 +183,7 @@ class SingleDeckBot(BotBase):
         numbers = self.number_detector.run(image)
         cards = self.card_detector.run(image)
         
-        overtime = self.detect_game_screen(image, "overtime")
+        overtime = self.screen.detect_game_screen(image, "overtime")
 
         remaining_seconds = numbers["time"]["number"]
         if remaining_seconds == -1:
@@ -269,10 +261,10 @@ class SingleDeckBot(BotBase):
     @exec_time
     def run(self, eps):
         image = self.controller.take_screenshot()
-        while not self.in_game(image):
+        while not self.screen.in_game(image):
             image = self.controller.take_screenshot()
 
-        while self.in_game(image):
+        while self.screen.ing_game(image):
             state = self.get_state(image)
             action = self.get_actions(state, eps=eps)
             self.play_actions(action)
@@ -281,13 +273,13 @@ class SingleDeckBot(BotBase):
 
             image = self.controller.take_screenshot()
 
-        while not self.is_game_end(image):
+        while not self.screen.is_game_end(image):
             image = self.controller.take_screenshot()
 
         time.sleep(3.0)
         image = self.controller.take_screenshot()
 
-        victory = self.is_victory(image)
+        victory = self.screen.is_victory(image)
 
         return victory
     
@@ -349,12 +341,12 @@ def debug(id, team, port):
     font = ImageFont.load_default()
 
     image = bot.controller.take_screenshot()
-    while not bot.in_game(image):
+    while not bot.screen.in_game(image):
         image = bot.controller.take_screenshot()
 
     count = 0
     width, height = image.size
-    while bot.in_game(image):
+    while bot.screen.in_game(image):
         image.save(f"{OUTPUT}/raw/img_{count}.png")
 
         state = bot.get_state(image)
@@ -488,7 +480,7 @@ def debug(id, team, port):
     image.save(os.path.join(OUTPUT, "img_-1.png"))
 
     print("Detected game end")
-    while not bot.is_game_end(image):
+    while not bot.screen.is_game_end(image):
         image = bot.controller.take_screenshot()
 
     time.sleep(3.0)
