@@ -3,7 +3,7 @@ import os
 import numpy as np
 from PIL import Image
 
-from screen import Screen
+from emulator import Controller
 from timing import exec_time
 from utils import compute_image_hash
 from constants import SCREEN_CONFIG, DATA_DIR, CARD_HEIGHT, CARD_WIDTH, CARD_CONFIG
@@ -13,7 +13,7 @@ from constants import SCREEN_CONFIG, DATA_DIR, CARD_HEIGHT, CARD_WIDTH, CARD_CON
 class BotBase:
 
     def __init__(self, hash_size=8, port=5555):
-        self.screen = Screen(port=port)
+        self.controller = Controller(port=port)
 
         self.replay_buffer = []
         self.screen_hashes = {}

@@ -264,13 +264,13 @@ class SingleDeckBot(BotBase):
         
         self.last_expense = self.handcards[actions]["cost"]
         
-        self.screen.select_place_unit(actions, self.side)
+        self.controller.select_place_unit(actions, self.side)
 
     @exec_time
     def run(self, eps):
-        image = self.screen.take_screenshot()
+        image = self.controller.take_screenshot()
         while not self.in_game(image):
-            image = self.screen.take_screenshot()
+            image = self.controller.take_screenshot()
 
         while self.in_game(image):
             state = self.get_state(image)
@@ -279,13 +279,13 @@ class SingleDeckBot(BotBase):
 
             self.store_experience(state, action)
 
-            image = self.screen.take_screenshot()
+            image = self.controller.take_screenshot()
 
         while not self.is_game_end(image):
-            image = self.screen.take_screenshot()
+            image = self.controller.take_screenshot()
 
         time.sleep(3.0)
-        image = self.screen.take_screenshot()
+        image = self.controller.take_screenshot()
 
         victory = self.is_victory(image)
 
@@ -348,9 +348,9 @@ def debug(id, team, port):
 
     font = ImageFont.load_default()
 
-    image = bot.screen.take_screenshot()
+    image = bot.controller.take_screenshot()
     while not bot.in_game(image):
-        image = bot.screen.take_screenshot()
+        image = bot.controller.take_screenshot()
 
     count = 0
     width, height = image.size
@@ -482,17 +482,17 @@ def debug(id, team, port):
         conc_img.paste(image, (0, 0))
         conc_img.save(f"{OUTPUT}/img_{count}.png")
 
-        image = bot.screen.take_screenshot()
+        image = bot.controller.take_screenshot()
         count += 1
 
     image.save(os.path.join(OUTPUT, "img_-1.png"))
 
     print("Detected game end")
     while not bot.is_game_end(image):
-        image = bot.screen.take_screenshot()
+        image = bot.controller.take_screenshot()
 
     time.sleep(3.0)
-    image = bot.screen.take_screenshot()
+    image = bot.controller.take_screenshot()
 
     victory = f"{'victory' if bot.is_victory(image) else 'loss'}"
     print(f"Detected outcome {victory}")

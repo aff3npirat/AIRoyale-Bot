@@ -8,7 +8,7 @@ from argparse import ArgumentParser
 import torch
 
 import timing
-import controller
+from emulator import Controller
 from utils import seed_all
 from bots.single_deck.bot import SingleDeckBot
 from constants import TOWER_HP_BOXES, PRINCESS_Y_OFFSET, ADB_PATH
@@ -41,11 +41,11 @@ def run_bot(
     bot = SingleDeckBot(team, unit_model, number_model, side_model, deck_names, king_levels={"ally": 11, "enemy": 11}, port=port)
 
     if accept_invite:
-        controller.accept_invite(bot.screen)
+        bot.controller.accept_invite()
 
     victory = bot.run(eps)
 
-    controller.exit_game(bot.screen)
+    bot.controller.exit_game()
 
     experience = bot.with_reward(bot.replay_buffer, victory)
     queue.put(experience)
@@ -58,7 +58,7 @@ def main(output, deck_names, ports, unit_model, side_model, number_model, eps):
 
     # send 1v1 invite
     for i in range(0, num_bots, 2):
-        controller.send_clan_1v1(ports[i])
+        Controller(ports[i]).send_clan_1v1()
 
     # start processes
     out_queue = Queue()
