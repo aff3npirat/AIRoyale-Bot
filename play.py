@@ -51,7 +51,7 @@ def run_bot(
     queue.put(experience)
 
 
-def main(output, deck_names, ports, unit_model, side_model, number_model, eps):
+def run(output, deck_names, ports, unit_model, side_model, number_model, eps):
     TEAMS = ["blue", "red"]
 
     num_bots = len(ports)
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     for port in args.ports:
         subprocess.run(f"{ADB_PATH} connect localhost:{port}")
 
-    main(
+    run(
         output=args.out,
         ports=args.ports,
         deck_names=args.deck,
