@@ -26,8 +26,6 @@ def run_bot(
     accept_invite=False,
     weights_path=None,
 ):
-    os.makedirs(output, exist_ok=True)
-
     pid = os.getpid()
     timing.init_logging(os.path.join(output, f"time_{pid}.log"))
 
@@ -143,6 +141,8 @@ if __name__ == "__main__":
     subprocess.run(f"{ADB_PATH} start-server")
     for port in args.ports:
         subprocess.run(f"{ADB_PATH} connect localhost:{port}")
+
+    os.makedirs(args.out, exist_ok=True)
 
     run(
         n_games=args.n,
