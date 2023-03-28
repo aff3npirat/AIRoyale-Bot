@@ -243,22 +243,20 @@ class SingleDeckBot(BotBase):
             q_vals[illegal_actions] = -torch.inf
             action = torch.argmax(q_vals)
 
+        return action
+    
+    def play_actions(self, action):
         if action == 0:
-            return -1
+            self.last_expense = 0
+            return
         
         action -= 1
         names = [card["name"] for card in self.handcards]
         slot_idx = names.index(self.sorted_handcards[action]["name"])
-        return slot_idx
-    
-    def play_actions(self, actions):
-        if actions == -1:
-            self.last_expense = 0
-            return
         
-        self.last_expense = self.handcards[actions]["cost"]
+        self.last_expense = self.handcards[slot_idx]["cost"]
         
-        self.controller.select_place_unit(actions, self.side)
+        self.controller.select_place_unit(slot_idx, self.side)
 
     @exec_time
     def run(self, eps):
@@ -355,7 +353,12 @@ def debug(id, team, port):
         action = bot.get_actions(state, eps=1.0)
         bot.play_actions(action)
 
-        bot_logger.info(f"[{count}] action={action}, handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}, towers_destroyed={bot.towers_destroyed}, towers_unhit={bot.towers_unhit}, approx_time={bot.approx_time}, last_expense={bot.last_expense}, elixir={bot.elixir}")
+        if action == 0:
+            action_slot_idx = -1
+        else:
+            names = [card["name"] for card in bot.handcards]
+            action_slot_idx = names.index(bot.sorted_handcards[action-1]["name"])
+        bot_logger.info(f"[{count}] action={action}, slot_idx={action_slot_idx} handcards={bot.handcards}, sorted_handcards={bot.sorted_handcards}, towers_destroyed={bot.towers_destroyed}, towers_unhit={bot.towers_unhit}, approx_time={bot.approx_time}, last_expense={bot.last_expense}, elixir={bot.elixir}")
 
         units = bot.unit_detector.run(image)
         numbers = bot.number_detector.run(image)
@@ -465,11 +468,11 @@ def debug(id, team, port):
             draw.text((x2, y1), UNIT_NAMES[c%8], fill=color, font=font, anchor="lt")
 
         # draw choosen action
-        if action == -1:
+        if action == 0:
             bbox = CARD_CONFIG[1]
             draw.rectangle(bbox, outline="red", width=2)
         else:  # highlight choosen slot
-            bbox = CARD_CONFIG[action+1]
+            bbox = CARD_CONFIG[action_slot_idx+1]
             draw.rectangle(bbox, outline="green", width=2)
 
         conc_img.paste(image, (0, 0))
