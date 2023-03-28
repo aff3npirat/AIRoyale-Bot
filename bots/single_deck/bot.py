@@ -7,7 +7,7 @@ from bots.custom_bot import BotBase
 from state.units import UnitDetector
 from state.cards import BlueCardDetector
 from state.numbers import NumberDetector
-from bots.single_deck.nn import BoardEmbedding, DenseNet
+from bots.single_deck.nn import QNet
 from timing import exec_time, intervall
 from constants import TILES_X, TILES_Y
 
@@ -46,8 +46,7 @@ class SingleDeckBot(BotBase):
         self.unit_detector = UnitDetector(unit_model_path, side_model_path, [i for i in range(8)])
         self.number_detector = NumberDetector(number_model_path)
         self.card_detector = BlueCardDetector(card_names=deck_names)
-        self.board_emb = BoardEmbedding()
-        self.Q_net = DenseNet([512+NEXT_CARD_END, 128, 64, 5], activation="sigmoid", bias=True, feature_extractor=False)
+        self.Q_net = QNet([512+NEXT_CARD_END, 128, 64, 5], activation="sigmoid", bias=True, feature_extractor=False)
 
         self.towers_destroyed = {k: False for k in ["enemy_king_hp", "ally_king_hp", f"{side}_ally_princess_hp", f"{side}_enemy_princess_hp"]}
         self.towers_unhit = {k: True for k in self.towers_destroyed}
@@ -57,10 +56,8 @@ class SingleDeckBot(BotBase):
         self.approx_time = 10
         self.tic = None
 
-    def init_model(self, weights):
-        q_net, board_net = weights
-        self.Q_net.load_state_dict(q_net)
-        self.board_emb.load_state_dict(board_net)
+    def init_model(self, state_dict):
+        self.Q_net.load_state_dict(state_dict)
 
     @staticmethod
     def with_reward(episode, victory):
@@ -231,14 +228,6 @@ class SingleDeckBot(BotBase):
 
         return board, context
     
-    def _get_q_vals(self, state):
-        board, context = state
-
-        emb = self.board_emb(board)
-        state = torch.cat((emb, context))
-        q_vals = self.Q_net(state)
-        return q_vals
-    
     @exec_time
     @torch.no_grad()
     def get_actions(self, state, eps=0.0):
@@ -249,7 +238,7 @@ class SingleDeckBot(BotBase):
             legal_actions = [i for i in range(5) if i not in illegal_actions]
             action = np.random.choice(np.array(legal_actions))
         else:
-            q_vals = self._get_q_vals(state)
+            q_vals = self.Q_net(state)
             q_vals[illegal_actions] = -torch.inf
             action = torch.argmax(q_vals)
 

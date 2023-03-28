@@ -103,3 +103,16 @@ class DenseNet(nn.Module):
     @exec_time
     def forward(self, x):
         return self.layers(x.unsqueeze(0)).squeeze(0)
+
+
+class QNet(nn.Module):
+
+    def __init__(self, net_arch, activation, feature_extractor=False, bias=True):
+        self.board_emb = BoardEmbedding()
+        self.val_net = DenseNet(net_arch=net_arch, activation=activation, feature_extractor=feature_extractor, bias=bias)
+
+    def forward(self, x):
+        board, context = x
+        board = self.board_emb(board)
+        context = torch.cat((board, context))
+        return self.val_net(context)
