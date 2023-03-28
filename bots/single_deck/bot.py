@@ -47,6 +47,7 @@ class SingleDeckBot(BotBase):
         self.number_detector = NumberDetector(number_model_path)
         self.card_detector = BlueCardDetector(card_names=deck_names)
         self.Q_net = QNet([512+NEXT_CARD_END, 128, 64, 5], activation="sigmoid", bias=True, feature_extractor=False)
+        self.Q_net.eval()
 
         self.towers_destroyed = {k: False for k in ["enemy_king_hp", "ally_king_hp", f"{side}_ally_princess_hp", f"{side}_enemy_princess_hp"]}
         self.towers_unhit = {k: True for k in self.towers_destroyed}
