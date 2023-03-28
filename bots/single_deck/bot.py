@@ -72,8 +72,8 @@ class SingleDeckBot(BotBase):
             experience.append(((prev_board, prev_context), prev_action, reward, False))
             (prev_board, prev_context), prev_action, prev_N_enemy = exp
 
-        outome_reward = 20 if victory else -30
-        experience.append(((board, context), action, outome_reward, True))
+        outcome_reward = 20 if victory else -30
+        experience.append(((board, context), action, outcome_reward, True))
 
         return experience
 
