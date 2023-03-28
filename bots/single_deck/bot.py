@@ -65,26 +65,27 @@ class SingleDeckBot(BotBase):
     @staticmethod
     def with_reward(episode, victory):
         experience = []
-        prev_state, prev_action, prev_N_enemy = episode[0]
+        (prev_board, prev_context), prev_action, prev_N_enemy = episode[0]
         for exp in episode[1:]:
-            state, action, N_enemy = exp
+            (board, context), action, N_enemy = exp
 
-            reward = SingleDeckBot.get_reward(state, prev_state, prev_action, N_enemy, prev_N_enemy)
+            reward = SingleDeckBot.get_reward(context, prev_context, prev_action, N_enemy, prev_N_enemy)
 
-            experience.append((prev_state, prev_action, reward, False))
+            experience.append(((prev_board, prev_context), prev_action, reward, False))
+            (prev_board, prev_context), prev_action, prev_N_enemy = exp
 
-        victory_reward = 20 if victory else -30
-        experience.append((state, action, victory_reward, True))
+        outome_reward = 20 if victory else -30
+        experience.append(((board, context), action, outome_reward, True))
 
         return experience
 
     @staticmethod
-    def get_reward(next_state, state, action, next_N_enemy, N_enemy):
+    def get_reward(next_context, context, action, next_N_enemy, N_enemy):
         troop_reward = max(N_enemy - next_N_enemy, 0) * 2
-        card_reward = -3 if action == -1 else 0
+        card_reward = -3 if action != -1 else 0
         
-        tower_hp = next_state[HEALTH_START:HEALTH_END]
-        prev_hp = state[HEALTH_START:HEALTH_END]
+        tower_hp = next_context[HEALTH_START:HEALTH_END]
+        prev_hp = context[HEALTH_START:HEALTH_END]
         enemy_towers = [0, 3]
         ally_towers = [1, 2]
 
@@ -96,7 +97,7 @@ class SingleDeckBot(BotBase):
         return troop_reward + card_reward + damage_reward
 
     def store_experience(self, state, actions):
-        N_enemy = torch.sum(self.board[8:])
+        N_enemy = torch.sum(state[0][8:])
         self.replay_buffer.append((state, actions, N_enemy))
 
     @exec_time
@@ -227,10 +228,16 @@ class SingleDeckBot(BotBase):
         context = self._get_context(numbers, cards)
 
         board = self._get_board_state(units)
-        self.board = board
-        emb = self.board_emb(board)
 
-        return torch.cat((emb, context))
+        return board, context
+    
+    def _get_q_vals(self, state):
+        board, context = state
+
+        emb = self.board_emb(board)
+        state = torch.cat((emb, context))
+        q_vals = self.Q_net(state)
+        return q_vals
     
     @exec_time
     @torch.no_grad()
@@ -242,7 +249,7 @@ class SingleDeckBot(BotBase):
             legal_actions = [i for i in range(5) if i not in illegal_actions]
             action = np.random.choice(np.array(legal_actions))
         else:
-            q_vals = self.Q_net(state)
+            q_vals = self._get_q_vals(state)
             q_vals[illegal_actions] = -torch.inf
             action = torch.argmax(q_vals)
 
@@ -269,7 +276,7 @@ class SingleDeckBot(BotBase):
         while not self.screen.in_game(image):
             image = self.controller.take_screenshot()
 
-        while self.screen.ing_game(image):
+        while self.screen.in_game(image):
             state = self.get_state(image)
             action = self.get_actions(state, eps=eps)
             self.play_actions(action)
@@ -401,8 +408,7 @@ def debug(id, team, port):
         del draw_
 
 
-        board = bot._get_board_state(units)
-        context = state[EMB_SIZE:]
+        board, context = state
 
         draw = ImageDraw.Draw(image)
 
