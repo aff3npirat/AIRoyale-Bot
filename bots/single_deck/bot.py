@@ -57,8 +57,8 @@ class SingleDeckBot(BotBase):
         self.approx_time = 10
         self.tic = None
 
-    def init_model(self, path):
-        q_net, board_net = torch.load(path)
+    def init_model(self, weights):
+        q_net, board_net = weights
         self.Q_net.load_state_dict(q_net)
         self.board_emb.load_state_dict(board_net)
 

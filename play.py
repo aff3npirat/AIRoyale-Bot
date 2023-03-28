@@ -24,7 +24,7 @@ def run_bot(
     output,
     eps,
     accept_invite=False,
-    weights_path=None,
+    network=None,
 ):
     pid = os.getpid()
     timing.init_logging(os.path.join(output, f"time_{pid}.log"))
@@ -37,8 +37,8 @@ def run_bot(
 
     bot = SingleDeckBot(team, unit_model, number_model, side_model, deck_names, king_levels={"ally": 11, "enemy": 11}, port=port)
 
-    if weights_path is not None:
-        bot.init_model(weights_path)
+    if network is not None:
+        bot.init_model(network)
 
     if accept_invite:
         bot.controller.accept_invite()
@@ -51,7 +51,7 @@ def run_bot(
     queue.put(experience)
 
 
-def play_single_game(output, deck_names, ports, unit_model, side_model, number_model, eps, weights_path):
+def play_single_game(output, deck_names, ports, unit_model, side_model, number_model, eps, network):
     TEAMS = ["blue", "red"]
 
     num_bots = len(ports)
@@ -73,7 +73,7 @@ def play_single_game(output, deck_names, ports, unit_model, side_model, number_m
         output,
         eps,
         i%2==1,
-        weights_path,
+        network,
     )) for i in range(num_bots)]
 
     for p in processes:
@@ -91,7 +91,7 @@ def play_single_game(output, deck_names, ports, unit_model, side_model, number_m
     return experiences
 
 
-def run(n_games, output, deck_names, ports, unit_model, side_model, number_model, eps, weights_path):
+def run(n_games, output, deck_names, ports, unit_model, side_model, number_model, eps, network):
     episodes = []
     for _ in range(n_games):
         episode = play_single_game(
@@ -102,7 +102,7 @@ def run(n_games, output, deck_names, ports, unit_model, side_model, number_model
             side_model=side_model,
             eps=eps,
             ports=ports,
-            weights_path=weights_path
+            network=network
         )
 
         if n_games == 1:
@@ -153,5 +153,5 @@ if __name__ == "__main__":
         number_model=args.num_model,
         side_model=args.side_model,
         eps=args.eps,
-        weights_path=args.net,
+        network=args.net,
     )
