@@ -61,6 +61,18 @@ class SingleDeckBot(BotBase):
         self.Q_net.load_state_dict(state_dict)
 
     @staticmethod
+    def get_illegal_actions(state):
+        _, context = state
+        illegal_actions = []
+        for i in range(4):
+            card_idx = CARDS_START+i*8
+            ready_idx = READY_START+i
+            if torch.sum(context[card_idx:card_idx+8]) == 0 or context[ready_idx] == 0:
+                illegal_actions.append(i+1)
+
+        return illegal_actions
+
+    @staticmethod
     def with_reward(episode, victory):
         experience = []
         (prev_board, prev_context), prev_action, prev_N_enemy = episode[0]

@@ -114,5 +114,5 @@ class QNet(nn.Module):
     def forward(self, x):
         board, context = x
         board = self.board_emb(board)
-        context = torch.cat((board, context), dim=-1)
+        context = torch.cat((board, context), dim=0)
         return self.val_net(context)

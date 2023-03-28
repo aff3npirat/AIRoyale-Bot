@@ -23,6 +23,13 @@ class BotBase:
         raise NotImplementedError
     
     @staticmethod
+    def get_illegal_actions(state):
+        """
+        Returns indices of illegal actions.
+        """
+        raise NotImplementedError
+    
+    @staticmethod
     def get_reward(*args, **kwargs):
         raise NotImplementedError
     
