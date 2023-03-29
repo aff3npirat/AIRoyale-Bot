@@ -20,8 +20,8 @@ from constants import (
 
 
 
-def get_window_size(port):
-    window_size = subprocess.check_output(f"{ADB_PATH} -s localhost:{port} shell wm size")
+def get_window_size(device):
+    window_size = subprocess.check_output(f"{ADB_PATH} -s {device} shell wm size")
     window_size = window_size.decode('ascii').replace('Physical size: ', '')
     width, height = [int(i) for i in window_size.split('x')]
     return width, height
