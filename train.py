@@ -11,7 +11,7 @@ from bots.single_deck.bot import NEXT_CARD_END, SingleDeckBot
 
 class Memory:
 
-    def __init__(self, size, alpha, beta, eps):
+    def __init__(self, size, alpha, beta, eps, beta_decay):
         self.size = size
         self.data = [None for _ in range(size)]
         self.priorities = torch.zeros(self.size)
@@ -20,6 +20,7 @@ class Memory:
         self.full = False
         self.alpha = alpha
         self.beta = beta
+        self.beta_decay = beta_decay
         self.eps = eps
 
     def sample(self, num_samples):
@@ -42,6 +43,8 @@ class Memory:
         batch = []
         for i in idxs:
             batch.append(self.data[i])
+
+        self.beta *= self.beta_decay
 
         return batch, idxs, weights
 
@@ -112,6 +115,7 @@ class Trainer:
         self.batch_size = hparams["batch_size"]
         self.discount = hparams["discount"]
         self.delta = hparams["delta"]
+        self.eps_decay = hparams["eps_decay"]
         self.n = hparams["n"]
         self.num_games = num_games
         self.deck_names = hparams["deck_names"]
@@ -259,6 +263,8 @@ class Trainer:
             self.train(batch_size=self.batch_size, num_batches=num_batches, device=self.device)  # train on new experience
             if self.memory.is_full():
                 self.train(batch_size=self.batch_size, num_batches=1, device=self.device)  # train on random experience
+
+            self.eps *= self.eps_decay
 
             self.checkpoint("last.pt")
 
