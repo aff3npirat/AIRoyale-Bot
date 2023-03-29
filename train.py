@@ -126,12 +126,12 @@ class Trainer:
         self.number_model = "./models/number_cpu.onnx"
 
         if checkpoint is None:
-            self.eps = hparams["eps"]
-            lr = hparams["lr"]
+            self.eps = hparams["eps0"]
+            lr = hparams["lr0"]
             self.game_count = 0
             self.update_count = 0
             self.delta_count = 0
-            self.memory = Memory()
+            self.memory = Memory(hparams["mem_size"], hparams["alpha0"], hparams["beta0"], hparams["min_sample_prob"], hparams["beta_decay"])
             self.time_elapsed = 0
         else:
             cp = torch.load(checkpoint)
