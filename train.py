@@ -1,6 +1,7 @@
 import os
 import copy
 import time
+import subprocess
 from argparse import ArgumentParser
 
 import torch
@@ -10,6 +11,7 @@ from bots.single_deck.nn import QNet
 from bots.single_deck.bot import NEXT_CARD_END, SingleDeckBot
 from timing import exec_time, init_logging
 from config import build_options, build_params
+from constants import ADB_PATH
 
 
 
@@ -245,6 +247,10 @@ if __name__ == "__main__":
     params = build_params(params_file=args.params)
 
     init_logging(os.path.join(options["output"], "timing.log"))
+
+    subprocess.run(f"{ADB_PATH} start-server")
+    for port in args.ports:
+        subprocess.run(f"{ADB_PATH} connect localhost:{port}")
 
     trainer = Trainer(
         hparams=params,

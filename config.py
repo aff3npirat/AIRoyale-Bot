@@ -1,6 +1,7 @@
 import yaml
 import torch
 import logging
+import os
 
 from memory import DiskMemory, Memory
 from bots.custom_bot import BotBase
@@ -61,6 +62,8 @@ def build_options(opts_dict=None, opts_file=None):
     elif opts_dict["logging"] is None:
         log_fn = lambda x: None
     else:
+        os.makedirs(opts_dict["output"], exist_ok=True)
+
         logger = logging.getLogger()
         logger.setLevel(logging.INFO)
         handler_file = logging.FileHandler(opts_dict["logging"], mode=opts_dict["logging_mode"])
