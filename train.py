@@ -7,6 +7,7 @@ import torch
 import play
 from bots.single_deck.nn import QNet
 from bots.single_deck.bot import NEXT_CARD_END, SingleDeckBot
+from memory import Memory
 
 
 
