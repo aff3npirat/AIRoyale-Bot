@@ -229,13 +229,12 @@ class Trainer:
             board = board.to(device)
             context = context.to(device)    
             with torch.no_grad():
-                mask = (dones==0)
-                state_n_step = (n_step_board[mask], n_step_context[mask])
+                state_n_step = (n_step_board, n_step_context)
                 action_n_step = self.main_net(state_n_step)
                 action_n_step[SingleDeckBot.get_illegal_actions(state_n_step)]
                 action_n_step = torch.argmax(action_n_step, dim=1)
                 q_n_step = self.target_net(state_n_step)[action_n_step]
-                discounted_rewards[mask] += q_n_step*torch.pow(self.discount, actual_n)
+                discounted_rewards += (1-dones)*q_n_step*torch.pow(self.discount, actual_n)
 
             predicted_q = self.main_net((board, context))
             target_q = predicted_q.detach().clone()
