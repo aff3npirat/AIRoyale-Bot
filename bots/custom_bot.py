@@ -30,6 +30,14 @@ class BotBase:
         raise NotImplementedError
     
     @staticmethod
+    def exp_to_dict(experience):
+        """
+        Returns an episode entry returned from `with_reward` as dictionary.
+        """
+        (board, context), action, reward, done = experience
+        return {"board": board, "context": context, "action": action, "reward": reward, "done": done}
+    
+    @staticmethod
     def get_reward(*args, **kwargs):
         raise NotImplementedError
     

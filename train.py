@@ -3,11 +3,79 @@ import copy
 import time
 
 import torch
+import h5py
 
 import play
 from bots.single_deck.nn import QNet
 from bots.single_deck.bot import NEXT_CARD_END, SingleDeckBot
 
+
+
+class DiskMemory:
+
+    def __init__(self, file, max_size=2**16, shape_dict=None, dtype_dict=None):
+        try:
+            with h5py.File(file, "r") as fout:
+                pass
+        except FileNotFoundError:
+            with h5py.File(file, "w-") as fout:
+                fout.attrs["groups"] = 0
+                fout.attrs["group_size"] = max_size
+                fout.attrs["size"] = 0
+                fout.attrs["names"] = list(shape_dict.keys())
+                for key in shape_dict:
+                    fout.attrs[f"{key}_shape"] = shape_dict[key]
+                    fout.attrs[f"{key}_dtype"] = dtype_dict[key]
+
+                DiskMemory._add_group(fout)
+
+        self.file = file
+
+    def add(self, entries):
+        N = len(entries)
+
+        with h5py.File(self.file, "r+") as fout:
+            max_size = fout.attrs["group_size"]
+
+            group_id = fout.attrs["groups"]
+            group = fout[f"{group_id}"]
+
+            data_pointer = group.attrs["data_pointer"]
+            idx = data_pointer
+
+            for i in range(N):
+                exp = SingleDeckBot.exp_to_dict(entries[i])
+                for key in fout.attrs["names"]:
+                    group[key][idx+1] = exp[key]
+
+                idx += 1
+
+                if idx == max_size-1:
+                    group.attrs["data_pointer"] = max_size - 1
+                    fout.attrs["size"] += idx - data_pointer
+                    group = DiskMemory._add_group(fout)
+
+                    data_pointer = group.attrs["data_pointer"]
+                    idx = data_pointer
+
+            group.attrs["data_pointer"] = idx
+            fout.attrs["size"] += idx - data_pointer
+
+    @staticmethod
+    def _add_group(file):
+        new_group = file.attrs["groups"] + 1
+        max_size = file.attrs["group_size"]
+
+        group = file.create_group(f"{new_group}")
+        group.attrs["data_pointer"] = -1
+        for name in file.attrs["names"]:
+            shape = file.attrs[f"{name}_shape"]
+            dtype = file.attrs[f"{name}_dtype"]
+            group.create_dataset(name, shape=(max_size, *shape), dtype=dtype, compression="gzip", compression_opts=6)
+
+        file.attrs["groups"] = new_group
+
+        return group
 
 
 class Memory:
@@ -107,6 +175,7 @@ class Trainer:
         self.device = torch.device(options["device"])
         self.cp_freq = options["checkpoint_frequency"]  # number of games
         self.output = options["output"]
+        self.disk_memory = options["disk_memory"]
 
         if log_fn is None:
             self.logger = lambda x: None
@@ -280,6 +349,7 @@ class Trainer:
             self.logger(f"Finished game {i+1}/{num_games}, total game count {self.game_count}")
 
             self.memory.add(episodes)
+            self.disk_memory.add(episodes)
 
             self.logger(f"Stored experience, memory-size: {len(self.memory)/self.memory.size}")
 
