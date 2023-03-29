@@ -103,12 +103,11 @@ def n_step_return(n, memory, start_idx, discount):
 
 class Trainer:
 
-    def __init__(self, output, num_games, hparams, ports, checkpoint=None, device="cpu"):
-        os.makedirs(output, exist_ok=True)
-
+    def __init__(self, output, logger, num_games, hparams, ports, checkpoint=None, device="cpu"):
         self.device = torch.device(device)
 
         self.output = output
+        self.logger = logger
         self.ports = ports
         self.output = output
         self.weight_decay = hparams["weight_decay"]
@@ -158,6 +157,9 @@ class Trainer:
         self.optim = torch.optim.SGD(self.main_net.parameters(), lr=lr, weight_decay=self.weight_decay)
 
     def checkpoint(self, name):
+        if not os.path.exists(self.output):
+            os.makedirs(self.output, exist_ok=True)
+
         path = os.path.join(self.output, name)
 
         cp = {
