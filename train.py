@@ -7,7 +7,6 @@ import torch
 import play
 from bots.single_deck.nn import QNet
 from bots.single_deck.bot import NEXT_CARD_END, SingleDeckBot
-from memory import Memory
 
 
 
@@ -55,7 +54,7 @@ class Trainer:
             self.game_count = 0
             self.update_count = 0
             self.delta_count = 0
-            self.memory = Memory(hparams["mem_size"], hparams["alpha"], hparams["beta0"], hparams["min_sample_prob"], hparams["beta_decay"])
+            self.memory = hparams["memory"]
             self.time_elapsed = 0
         else:
             cp = torch.load(checkpoint)

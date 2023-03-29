@@ -1,1 +1,69 @@
-# TODO add inference, training params such as iou-thres, conf-thres...
+import yaml
+import torch
+
+from memory import DiskMemory, Memory
+from bots.custom_bot import BotBase
+
+
+
+def build_params(params_dict=None, params_file=None):
+    if params_dict is None:
+        with open(params_file, "r") as f:
+            params_dict = yaml.safe_load(f)
+
+    replay_memory = Memory(
+        size=params_dict["memory_size"],
+        alpha=params_dict["alpha"],
+        beta=params_dict["beta"],
+        beta_decay=params_dict["beta_decay"],
+        eps=params_dict["min_sample_prob"],
+    )
+
+    new_dict = {"memory": replay_memory}
+
+    to_copy = [
+        "eps0", "lr0", "eps_decay", "discount", "n",
+        "delta",
+        "weight_decay","batch_size",
+        "unit_model", "side_model", "number_model",
+    ]
+    for key in to_copy:
+        new_dict[key] = params_dict[key]
+
+    return new_dict
+
+
+def build_options(opts_dict=None, opts_file=None):
+    if opts_dict is None:
+        with open(opts_file, "r") as f:
+            opts_dict = yaml.safe_load(f)
+
+    if "names" in opts_dict:
+        shape_dict, dtype_dict = {}, {}
+        for i, name in enumerate(opts_dict["names"]):
+            shape_dict[name] = opts_dict["shapes"][i]
+            dtype_dict[name] = opts_dict["dtypes"][i]
+    else:
+        shape_dict, dtype_dict = None, None
+
+    disk_memory = DiskMemory(
+        file=opts_dict["disk_memory"],
+        data_transform=BotBase.exp_to_dict,
+        shape_dict=shape_dict,
+        dtype_dict=dtype_dict,
+        max_size=opts_dict["max_size"] if "max_size" in opts_dict else None,
+    )
+
+    new_dict = {
+        "disk_memory": disk_memory,
+        "device": torch.device(opts_dict["device"]),
+    }
+
+    to_copy = [
+        "checkpoint_frequency", "output"
+    ]
+
+    for key in to_copy:
+        new_dict[key] = opts_dict[key]
+
+    return new_dict
