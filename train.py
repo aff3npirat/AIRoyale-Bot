@@ -1,13 +1,15 @@
 import os
 import copy
 import time
+from argparse import ArgumentParser
 
 import torch
 
 import play
 from bots.single_deck.nn import QNet
 from bots.single_deck.bot import NEXT_CARD_END, SingleDeckBot
-from timing import exec_time
+from timing import exec_time, init_logging
+from config import build_options, build_params
 
 
 
@@ -227,3 +229,29 @@ class Trainer:
                 self.checkpoint("last.pt")
         
         self.time_elapsed += time.time() - self.tic
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument("--opt", type=str)
+    parser.add_argument("--params", type=str)
+    parser.add_argument("--n", type=int)
+    parser.add_argument("--resume", type=str, default=None)
+    parser.add_argument("--ports", nargs=2, type=int)
+
+    args = parser.parse_args()
+
+    options = build_options(opts_file=args.opt)
+    params = build_params(params_file=args.params)
+
+    init_logging(os.path.join(options["output"], "timing.log"))
+
+    trainer = Trainer(
+        hparams=params,
+        options=options,
+        ports=args.ports,
+        checkpoint=args.resume,
+        log_fn=options["logger"],
+    )
+
+    trainer.run(args.n)

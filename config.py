@@ -1,5 +1,6 @@
 import yaml
 import torch
+import logging
 
 from memory import DiskMemory, Memory
 from bots.custom_bot import BotBase
@@ -55,9 +56,21 @@ def build_options(opts_dict=None, opts_file=None):
         max_size=opts_dict["max_size"] if "max_size" in opts_dict else None,
     )
 
+    if opts_dict["logging"] == "print":
+        log_fn = print
+    elif opts_dict["logging"] is None:
+        log_fn = lambda x: None
+    else:
+        logger = logging.getLogger()
+        logger.setLevel(logging.INFO)
+        handler_file = logging.FileHandler(opts_dict["logging"], mode=opts_dict["logging_mode"])
+        logger.addHandler(handler_file)
+        log_fn = logger.info
+
     new_dict = {
         "disk_memory": disk_memory,
         "device": torch.device(opts_dict["device"]),
+        "logger": log_fn,
     }
 
     to_copy = [
