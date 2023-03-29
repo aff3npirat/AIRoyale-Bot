@@ -7,3 +7,5 @@ scipy
 torch
 torchvision
 onnxruntime
+pyyaml
+h5py

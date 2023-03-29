@@ -1,6 +1,5 @@
 # Play a bot vs. bot match.
 import os
-import time
 import subprocess
 from multiprocessing import Process, Queue
 from argparse import ArgumentParser
