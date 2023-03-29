@@ -31,12 +31,7 @@ class Memory:
             idxs = self.new_data[:num_samples]
             del self.new_data[:num_samples]
             
-            weights = torch.ones(num_samples)
-            
-            if len(idxs) < num_samples:
-                idxs_ = torch.multinomial(probs, num_samples=num_samples-len(idxs), replacement=False)
-                weights[len(idxs):] = (1/(probs[idxs_]*self.size))**self.beta
-                idxs.extend(idxs_.tolist())
+            weights = torch.ones(len(idxs))
         else:
             idxs = torch.multinomial(probs, num_samples=num_samples, replacement=False).tolist()
             weights = (1/(probs[idxs]*self.size))**self.beta
