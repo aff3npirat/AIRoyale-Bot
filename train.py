@@ -40,6 +40,7 @@ class Memory:
         else:
             idxs = torch.multinomial(probs, num_samples=num_samples, replacement=False).tolist()
             weights = (1/(probs[idxs]*self.size))**self.beta
+            self.beta *= self.beta_decay
 
         if shuffle:
             shuffled_idx = torch.randperm(num_samples)
@@ -49,8 +50,6 @@ class Memory:
         batch = []
         for i in idxs:
             batch.append(self.data[i])
-
-        self.beta *= self.beta_decay
 
         return batch, idxs, weights
 
