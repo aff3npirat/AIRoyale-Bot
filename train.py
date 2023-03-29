@@ -261,3 +261,5 @@ if __name__ == "__main__":
     )
 
     trainer.run(args.n)
+
+    subprocess.run(f"{ADB_PATH} kill-server")

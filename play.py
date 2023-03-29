@@ -154,3 +154,5 @@ if __name__ == "__main__":
         eps=args.eps,
         network=args.net,
     )
+
+    subprocess.run(f"{ADB_PATH} kill-server")
