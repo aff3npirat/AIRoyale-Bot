@@ -1,5 +1,6 @@
 import os
 import copy
+import time
 
 import torch
 
@@ -103,11 +104,15 @@ def n_step_return(n, memory, start_idx, discount):
 
 class Trainer:
 
-    def __init__(self, output, logger, num_games, hparams, ports, checkpoint=None, device="cpu"):
+    def __init__(self, output, num_games, hparams, ports, checkpoint=None, device="cpu", log_fn=None):
         self.device = torch.device(device)
 
+        if log_fn is None:
+            self.logger = lambda x: None
+        else:
+            self.logger = log_fn
+
         self.output = output
-        self.logger = logger
         self.ports = ports
         self.output = output
         self.weight_decay = hparams["weight_decay"]
@@ -129,6 +134,7 @@ class Trainer:
             self.update_count = 0
             self.delta_count = 0
             self.memory = Memory()
+            self.time_elapsed = 0
         else:
             cp = torch.load(checkpoint)
 
@@ -143,6 +149,9 @@ class Trainer:
             self.game_count = cp["game_counter"]
             self.update_count = cp["update_counter"]
             self.delta_count = cp["delta_count"]
+            self.time_elapsed = cp["training_time"]
+
+            self.logger(f"Loaded checkpoint '{checkpoint}'")
 
         self.main_net = QNet([512+NEXT_CARD_END, 128, 64, 5], activation="sigmoid", bias=True, feature_extractor=False)
         if checkpoint is not None:
@@ -162,6 +171,9 @@ class Trainer:
 
         path = os.path.join(self.output, name)
 
+        self.time_elapsed += time.time() - self.tic
+        self.tic = time.time()
+
         cp = {
             "main_net": self.main_net.cpu().state_dict(),
             "target_net": self.target_net.cpu().state_dict(),
@@ -171,17 +183,22 @@ class Trainer:
             "game_counter": self.game_count,
             "update_counter": self.update_count,
             "delta_count": self.delta_count,
+            "training_time": self.time_elapsed
         }
 
         torch.save(cp, path)
 
     def update_target_net(self):
+        self.logger("Updating target net")
+
         self.target_net = copy.deepcopy(self.main_net)
         self.target_net.eval()
 
     def train(self, batch_size, num_batches, device):
         for b in range(num_batches):
             batch, idxs, is_weights = self.memory.sample(batch_size)  # list of tuples ((board, context), action, reward, done)
+
+            self.logger(f"Collecting n-step-return for batch {b}/{num_batches}")
 
             board = torch.empty((batch_size, *batch[0][0][0].shape))
             context = torch.empty((batch_size, *batch[0][0][1].shape))
@@ -204,6 +221,7 @@ class Trainer:
                     n_step_context[i] = state_n_step[1]
                     dones[i] = 0.0
                     
+            self.logger(f"Calculating TD-errors for batch {b}/{num_batches}")
 
             discounted_rewards = discounted_rewards.to(device)
             n_step_board = n_step_board.to(device)
@@ -226,6 +244,8 @@ class Trainer:
             abs_errors = torch.sum(torch.abs(target_q - predicted_q), dim=1)
 
             loss = torch.mean((abs_errors**2) * is_weights.to(device))
+            self.logger(f"Loss {loss:.4f}, performing backward")
+
             self.optim.zero_grad()
             loss.backward()
             self.optim.step()
@@ -239,10 +259,14 @@ class Trainer:
                 self.update_target_net()
     
     def run(self):
+        self.tic = time.time()
+
         self.main_net = self.main_net.to(self.device)
         self.target_net = self.target_net.to(self.device)
 
-        for _ in range(self.num_games):
+        for i in range(self.num_games):
+            self.logger(f"Starting game {i+1}/{self.num_games}")
+
             episodes = play.run(
                 n_games=1,
                 output=self.output,
@@ -255,20 +279,30 @@ class Trainer:
                 network=self.main_net.cpu().state_dict(),
             )
 
+            self.logger(f"Finished game {i+1}/{self.num_games}")
+
             self.game_count += 1
             self.memory.add(episodes)
+
+            self.logger(f"Stored experience, memory-size: {len(self.memory)/self.memory.size}")
 
             num_batches = len(episodes)//self.batch_size
             if len(episodes)%self.batch_size != 0:
                 num_batches += 1
 
+            self.logger(f"Training on new experience for {num_batches} batches")
+
             self.train(batch_size=self.batch_size, num_batches=num_batches, device=self.device)  # train on new experience
             if self.memory.is_full():
+                self.logger("Training on past experience")
                 self.train(batch_size=self.batch_size, num_batches=1, device=self.device)  # train on random experience
 
+            self.logger(f"epsilon decay: {self.eps} -> {self.eps*self.eps_decay}")
             self.eps *= self.eps_decay
 
             self.checkpoint("last.pt")
+        
+        self.time_elapsed += time.time() - self.tic
 
 
 
