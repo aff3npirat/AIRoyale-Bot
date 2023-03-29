@@ -103,17 +103,17 @@ def n_step_return(n, memory, start_idx, discount):
 
 class Trainer:
 
-    def __init__(self, output, hparams, ports, checkpoint=None, device="cpu", log_fn=None):
-        self.device = torch.device(device)
+    def __init__(self, hparams, ports, options, checkpoint=None, log_fn=None):
+        self.device = torch.device(options["device"])
+        self.cp_freq = options["checkpoint_frequency"]  # number of games
+        self.output = options["output"]
 
         if log_fn is None:
             self.logger = lambda x: None
         else:
             self.logger = log_fn
 
-        self.output = output
         self.ports = ports
-        self.output = output
         self.weight_decay = hparams["weight_decay"]
         self.batch_size = hparams["batch_size"]
         self.discount = hparams["discount"]
@@ -276,9 +276,9 @@ class Trainer:
                 network=self.main_net.cpu().state_dict(),
             )
 
-            self.logger(f"Finished game {i+1}/{num_games}")
-
             self.game_count += 1
+            self.logger(f"Finished game {i+1}/{num_games}, total game count {self.game_count}")
+
             self.memory.add(episodes)
 
             self.logger(f"Stored experience, memory-size: {len(self.memory)/self.memory.size}")
@@ -297,7 +297,8 @@ class Trainer:
             self.logger(f"epsilon decay: {self.eps} -> {self.eps*self.eps_decay}")
             self.eps *= self.eps_decay
 
-            self.checkpoint("last.pt")
+            if self.game_count%self.cp_freq == 0:
+                self.checkpoint("last.pt")
         
         self.time_elapsed += time.time() - self.tic
 
