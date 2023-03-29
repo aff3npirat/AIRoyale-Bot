@@ -92,11 +92,11 @@ class Controller:
         x = x / SCREENSHOT_WIDTH * self.width
         y = y / SCREENSHOT_HEIGHT * self.height
 
-        subprocess.run(f"{ADB_PATH} -s {self.target} shell input tap {x} {y}")
+        subprocess.run(f"{ADB_PATH} -s {self.device} shell input tap {x} {y}")
 
     @exec_time
     def take_screenshot(self):
-        screenshot_bytes = subprocess.run(f"{ADB_PATH} -s {self.target} exec-out screencap", check=True, capture_output=True).stdout
+        screenshot_bytes = subprocess.run(f"{ADB_PATH} -s {self.device} exec-out screencap", check=True, capture_output=True).stdout
         screenshot = Image.frombuffer('RGBA', (self.width, self.height), screenshot_bytes[12:], 'raw', 'RGBX', 0, 1)
         screenshot = screenshot.convert('RGB').resize((SCREENSHOT_WIDTH, SCREENSHOT_HEIGHT), Image.BILINEAR)
         return screenshot
@@ -126,5 +126,5 @@ class Controller:
         select = f"dd bs=160 if=/mnt/sdcard/slot{slot_idx+1} of=/dev/input/event5"
         wait = "busybox usleep 20000"
         place = f"dd bs=160 if=/mnt/sdcard/tile_{side} of=/dev/input/event5"
-        subprocess.run(rf"{ADB_PATH} -s {self.target} shell {select}; {wait}; {place}", stderr=subprocess.DEVNULL)
+        subprocess.run(rf"{ADB_PATH} -s {self.device} shell {select}; {wait}; {place}", stderr=subprocess.DEVNULL)
 
