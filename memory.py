@@ -1,6 +1,8 @@
 import h5py
 import torch
 
+from timing import exec_time
+
 
 
 class DiskMemory:
@@ -24,6 +26,7 @@ class DiskMemory:
         self.file = file
         self.transform = data_transform
 
+    @exec_time
     def add(self, entries):
         N = len(entries)
 

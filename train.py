@@ -7,6 +7,7 @@ import torch
 import play
 from bots.single_deck.nn import QNet
 from bots.single_deck.bot import NEXT_CARD_END, SingleDeckBot
+from timing import exec_time
 
 
 
@@ -115,6 +116,7 @@ class Trainer:
         self.target_net = copy.deepcopy(self.main_net)
         self.target_net.eval()
 
+    @exec_time
     def train(self, batch_size, num_batches, device, shuffle=True):
         for b in range(num_batches):
             batch, idxs, is_weights = self.memory.sample(batch_size, shuffle=shuffle)  # list of tuples ((board, context), action, reward, done)
@@ -225,9 +227,3 @@ class Trainer:
                 self.checkpoint("last.pt")
         
         self.time_elapsed += time.time() - self.tic
-
-
-
-
-
-
