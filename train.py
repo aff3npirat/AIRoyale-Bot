@@ -103,7 +103,7 @@ def n_step_return(n, memory, start_idx, discount):
 
 class Trainer:
 
-    def __init__(self, output, num_games, hparams, ports, checkpoint=None, device="cpu", log_fn=None):
+    def __init__(self, output, hparams, ports, checkpoint=None, device="cpu", log_fn=None):
         self.device = torch.device(device)
 
         if log_fn is None:
@@ -120,7 +120,6 @@ class Trainer:
         self.delta = hparams["delta"]
         self.eps_decay = hparams["eps_decay"]
         self.n = hparams["n"]
-        self.num_games = num_games
         self.deck_names = hparams["deck_names"]
         self.unit_model = "./models/units_singledeck_cpu.onnx"
         self.side_model = "./models/side_cpu.onnx"
@@ -256,14 +255,14 @@ class Trainer:
             if self.delta_count%self.delta == 0:
                 self.update_target_net()
     
-    def run(self):
+    def run(self, num_games):
         self.tic = time.time()
 
         self.main_net = self.main_net.to(self.device)
         self.target_net = self.target_net.to(self.device)
 
-        for i in range(self.num_games):
-            self.logger(f"Starting game {i+1}/{self.num_games}")
+        for i in range(num_games):
+            self.logger(f"Starting game {i+1}/{num_games}")
 
             episodes = play.run(
                 n_games=1,
@@ -277,7 +276,7 @@ class Trainer:
                 network=self.main_net.cpu().state_dict(),
             )
 
-            self.logger(f"Finished game {i+1}/{self.num_games}")
+            self.logger(f"Finished game {i+1}/{num_games}")
 
             self.game_count += 1
             self.memory.add(episodes)
