@@ -24,7 +24,7 @@ class Memory:
         self.beta_decay = beta_decay
         self.eps = eps
 
-    def sample(self, num_samples):
+    def sample(self, num_samples, shuffle=True):
         probs = self.priorities / torch.sum(self.priorities)
 
         if len(self.new_data) > 0:
@@ -40,6 +40,11 @@ class Memory:
         else:
             idxs = torch.multinomial(probs, num_samples=num_samples, replacement=False).tolist()
             weights = (1/(probs[idxs]*self.size))**self.beta
+
+        if shuffle:
+            shuffled_idx = torch.randperm(num_samples)
+            weights = weights[shuffled_idx]
+            idxs = torch.tensor(idxs)[shuffled_idx].tolist()
 
         batch = []
         for i in idxs:
@@ -194,9 +199,9 @@ class Trainer:
         self.target_net = copy.deepcopy(self.main_net)
         self.target_net.eval()
 
-    def train(self, batch_size, num_batches, device):
+    def train(self, batch_size, num_batches, device, shuffle=True):
         for b in range(num_batches):
-            batch, idxs, is_weights = self.memory.sample(batch_size)  # list of tuples ((board, context), action, reward, done)
+            batch, idxs, is_weights = self.memory.sample(batch_size, shuffle=shuffle)  # list of tuples ((board, context), action, reward, done)
 
             self.logger(f"Collecting n-step-return for batch {b}/{num_batches}")
 
@@ -294,7 +299,7 @@ class Trainer:
             self.train(batch_size=self.batch_size, num_batches=num_batches, device=self.device)  # train on new experience
             if self.memory.is_full():
                 self.logger("Training on past experience")
-                self.train(batch_size=self.batch_size, num_batches=1, device=self.device)  # train on random experience
+                self.train(batch_size=self.batch_size, num_batches=1, device=self.device, shuffle=False)  # train on random experience
 
             self.logger(f"epsilon decay: {self.eps} -> {self.eps*self.eps_decay}")
             self.eps *= self.eps_decay
