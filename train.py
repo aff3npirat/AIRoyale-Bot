@@ -35,8 +35,8 @@ class Memory:
             
             if len(idxs) < num_samples:
                 idxs_ = torch.multinomial(probs, num_samples=num_samples-len(idxs), replacement=False)
-                idxs.extend(idxs_.tolist())
                 weights[len(idxs):] = (1/(probs[idxs_]*self.size))**self.beta
+                idxs.extend(idxs_.tolist())
         else:
             idxs = torch.multinomial(probs, num_samples=num_samples, replacement=False).tolist()
             weights = (1/(probs[idxs]*self.size))**self.beta
