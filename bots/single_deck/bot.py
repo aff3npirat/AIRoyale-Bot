@@ -502,7 +502,7 @@ def debug(id, team, port):
     time.sleep(3.0)
     image = bot.controller.take_screenshot()
 
-    victory = f"{'victory' if bot.is_victory(image) else 'loss'}"
+    victory = f"{'victory' if bot.screen.is_victory(image) else 'loss'}"
     print(f"Detected outcome {victory}")
 
     draw = ImageDraw.Draw(image)
@@ -529,7 +529,7 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
     
     parser = ArgumentParser()
-    parser.add_argument("--port", nargs=1, type=int, default=5555)
+    parser.add_argument("--port", type=int, default=5555)
     parser.add_argument("--team", type=str, default="blue")
     parser.add_argument("--id", type=str, default="")
     args = parser.parse_args()

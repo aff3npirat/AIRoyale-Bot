@@ -108,6 +108,8 @@ class DenseNet(nn.Module):
 class QNet(nn.Module):
 
     def __init__(self, net_arch, activation, feature_extractor=False, bias=True):
+        super().__init__()
+
         self.board_emb = BoardEmbedding()
         self.val_net = DenseNet(net_arch=net_arch, activation=activation, feature_extractor=feature_extractor, bias=bias)
 
