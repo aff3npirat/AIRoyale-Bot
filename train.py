@@ -5,6 +5,7 @@ import subprocess
 from argparse import ArgumentParser
 
 import torch
+import yaml
 
 import play
 from bots.single_deck.nn import QNet
@@ -30,16 +31,13 @@ def n_step_return(n, memory, start_idx, discount):
 
 class Trainer:
 
-    def __init__(self, hparams, ports, options, checkpoint=None, log_fn=None):
+    def __init__(self, hparams, ports, options, checkpoint=None):
         self.device = options["device"]
         self.cp_freq = options["checkpoint_frequency"]  # number of games
         self.output = options["output"]
         self.disk_memory = options["disk_memory"]
 
-        if log_fn is None:
-            self.logger = lambda x: None
-        else:
-            self.logger = log_fn
+        self.logger = options["logger"]
 
         self.ports = ports
         self.weight_decay = hparams["weight_decay"]
@@ -94,10 +92,9 @@ class Trainer:
         self.lr_decay.step(self.game_count)
 
     def checkpoint(self, name):
-        if not os.path.exists(self.output):
-            os.makedirs(self.output, exist_ok=True)
-
-        path = os.path.join(self.output, name)
+        path = os.path.join(self.output, "checkpoints", name)
+        if not os.path.exists(path):
+            os.makedirs(path, exist_ok=False)
 
         self.time_elapsed += time.time() - self.tic
         self.tic = time.time()
@@ -233,7 +230,8 @@ class Trainer:
             self.logger(f"New learningrate: {self.optim.param_groups()[0]['lr']}")
 
             if self.game_count%self.cp_freq == 0:
-                self.checkpoint("last.pt")
+                self.checkpoint(f"game_{self.game_count}.pt")
+            self.checkpoint("last.pt")
         
         self.time_elapsed += time.time() - self.tic
 
@@ -251,7 +249,17 @@ if __name__ == "__main__":
     options = build_options(opts_file=args.opt)
     params = build_params(params_file=args.params)
 
-    init_logging(os.path.join(options["output"], "timing.log"))
+    out_dir = options["output"]
+    os.makedirs(out_dir, exist_ok=True)
+
+    with open(os.path.join(out_dir, "options.yaml", "wt")) as f:
+        for key in options:
+            f.write(f"{key}: {options[key]}\n")
+    with open(os.path.join(out_dir, "hparams.yaml", "wt")) as f:
+        for key in params:
+            f.write(f"{key}: {params[key]}\n")
+
+    init_logging(os.path.join(out_dir, "timing.log"))
 
     subprocess.run(f"{ADB_PATH} start-server")
     for port in args.ports:
@@ -262,7 +270,6 @@ if __name__ == "__main__":
         options=options,
         ports=args.ports,
         checkpoint=args.resume,
-        log_fn=options["logger"],
     )
 
     trainer.run(args.n)
