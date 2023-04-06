@@ -59,7 +59,7 @@ class SingleDeckBot(BotBase):
             else:
                 tile = ""
         
-        placement_tiles[card["name"]] = f"{self.side}{tile}"
+            placement_tiles[card["name"]] = f"{self.side}{tile}"
         self.placement_tiles = placement_tiles
 
         self.towers_destroyed = {k: False for k in ["enemy_king_hp", "ally_king_hp", f"{side}_ally_princess_hp", f"{side}_enemy_princess_hp"]}
@@ -365,6 +365,7 @@ def debug(id, team, port):
     )
 
     bot_logger.info(f"Ally units={bot.unit_detector.ally_units}")
+    bot_logger.inof(f"Placement tiles={bot.placement_tiles}")
 
     font = ImageFont.load_default()
 
