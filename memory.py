@@ -76,7 +76,7 @@ class DiskMemory:
 
 class Memory:
 
-    def __init__(self, size, alpha, beta, eps, beta_decay):
+    def __init__(self, size, alpha, beta, min_prob, beta_decay):
         self.size = size
         self.data = [None for _ in range(size)]
         self.priorities = torch.zeros(self.size)
@@ -86,7 +86,7 @@ class Memory:
         self.alpha = alpha
         self.beta = beta
         self.beta_decay = beta_decay
-        self.eps = eps
+        self.min_prob = min_prob
 
     def sample(self, num_samples, shuffle=True):
         probs = self.priorities / torch.sum(self.priorities)
@@ -134,7 +134,7 @@ class Memory:
             self._safe_add(entries[-overflow:])
 
     def update(self, indices, errors):
-        priorities = errors**self.alpha + self.eps
+        priorities = errors**self.alpha + self.min_prob
         self.priorities[indices] = priorities
 
     def is_full(self):

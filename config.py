@@ -18,7 +18,7 @@ def build_params(params_dict=None, params_file=None):
         alpha=params_dict["alpha"],
         beta=params_dict["beta"],
         beta_decay=params_dict["beta_decay"],
-        eps=params_dict["min_sample_prob"],
+        min_prob=params_dict["min_sample_prob"],
     )
 
     new_dict = {"memory": replay_memory}
