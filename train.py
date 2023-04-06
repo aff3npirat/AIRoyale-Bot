@@ -227,7 +227,10 @@ class Trainer:
                 self.train(batch_size=self.batch_size, num_batches=1, device=self.device, shuffle=False)  # train on random experience
 
             self.eps *= self.eps_decay
-            self.logger(f"new epsilon {self.eps}")
+            self.logger(f"New epsilon: {self.eps}")
+
+            self.lr_decay.step(self.game_count)
+            self.logger(f"New learningrate: {self.optim.param_groups()[0]['lr']}")
 
             if self.game_count%self.cp_freq == 0:
                 self.checkpoint("last.pt")

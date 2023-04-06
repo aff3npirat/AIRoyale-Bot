@@ -3,6 +3,8 @@ import torch
 import logging
 import os
 
+import torch
+
 from memory import DiskMemory, Memory
 from bots.custom_bot import BotBase
 
@@ -21,7 +23,10 @@ def build_params(params_dict=None, params_file=None):
         min_prob=params_dict["min_sample_prob"],
     )
 
-    new_dict = {"memory": replay_memory}
+    lr_decay_cls = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts
+    lr_decay_fn = lambda optim: lr_decay_cls(optim, params_dict["n_restart"], 1, params_dict["lr_min"], verbose=False)
+
+    new_dict = {"memory": replay_memory, "lr_decay": lr_decay_fn}
 
     to_copy = [
         "eps0", "lr0", "eps_decay", "discount", "n",
