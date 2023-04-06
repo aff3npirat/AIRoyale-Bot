@@ -46,14 +46,11 @@ def build_options(opts_dict=None, opts_file=None):
         with open(opts_file, "r") as f:
             opts_dict = yaml.safe_load(f)
 
-    shape_dict = SingleDeckBot.get_shapes()
-    dtype_dict = opts_dict["dtypes"]
-
     disk_memory = DiskMemory(
         file=opts_dict["disk_memory"],
         data_transform=SingleDeckBot.exp_to_dict,
-        shape_dict=shape_dict,
-        dtype_dict=dtype_dict,
+        shape_dict=SingleDeckBot.get_shapes(),
+        dtype_dict=opts_dict["dtypes"],
         max_size=opts_dict["max_size"],
     )
 
