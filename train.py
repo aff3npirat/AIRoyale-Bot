@@ -57,8 +57,8 @@ class Trainer:
             self.eps = hparams["eps0"]
             lr = hparams["lr0"]
             self.game_count = 0
+            self.sample_count = 0
             self.update_count = 0
-            self.delta_count = 0
             self.memory = hparams["memory"]
             self.time_elapsed = 0
         else:
@@ -73,8 +73,8 @@ class Trainer:
             target_net_state_dict = cp["target_net"]
 
             self.game_count = cp["game_counter"]
-            self.update_count = cp["update_counter"]
-            self.delta_count = cp["delta_count"]
+            self.sample_count = cp["update_counter"]
+            self.update_count = cp["delta_count"]
             self.time_elapsed = cp["training_time"]
 
             self.logger(f"Loaded checkpoint '{checkpoint}'")
@@ -90,6 +90,8 @@ class Trainer:
         self.target_net.eval()
 
         self.optim = torch.optim.SGD(self.main_net.parameters(), lr=lr, weight_decay=self.weight_decay)
+        self.lr_decay = hparams["lr_decay"](self.optim)
+        self.lr_decay.step(self.game_count)
 
     def checkpoint(self, name):
         if not os.path.exists(self.output):
@@ -107,8 +109,8 @@ class Trainer:
             "eps": self.eps,
             "lr": self.optim.param_groups[0]["lr"],
             "game_counter": self.game_count,
-            "update_counter": self.update_count,
-            "delta_count": self.delta_count,
+            "update_counter": self.sample_count,
+            "delta_count": self.update_count,
             "training_time": self.time_elapsed
         }
 
@@ -178,10 +180,10 @@ class Trainer:
 
             self.memory.update(idxs, abs_errors.detach().cpu())
 
-            self.delta_count += 1
-            self.update_count += len(batch)
+            self.update_count += 1
+            self.sample_count += len(batch)
 
-            if self.delta_count%self.delta == 0:
+            if self.update_count%self.delta == 0:
                 self.update_target_net()
     
     def run(self, num_games):
@@ -217,15 +219,15 @@ class Trainer:
             if len(episodes)%self.batch_size != 0:
                 num_batches += 1
 
-            self.logger(f"Training on new experience for {num_batches} batches")
+            self.logger(f"Training on {len(episodes)} new experiences")
 
             self.train(batch_size=self.batch_size, num_batches=num_batches, device=self.device)  # train on new experience
             if self.memory.is_full():
                 self.logger("Training on past experience")
                 self.train(batch_size=self.batch_size, num_batches=1, device=self.device, shuffle=False)  # train on random experience
 
-            self.logger(f"epsilon decay: {self.eps} -> {self.eps*self.eps_decay}")
             self.eps *= self.eps_decay
+            self.logger(f"new epsilon {self.eps}")
 
             if self.game_count%self.cp_freq == 0:
                 self.checkpoint("last.pt")
