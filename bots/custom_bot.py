@@ -34,7 +34,10 @@ class BotBase:
         """
         Returns an episode entry returned from `with_reward` as dictionary.
         """
-        (board, context), action, reward, done = experience
+        if experience is None:
+            board, context, action, reward, done = None
+        else:
+            (board, context), action, reward, done = experience
         return {"board": board, "context": context, "action": action, "reward": reward, "done": done}
     
     @staticmethod

@@ -6,7 +6,7 @@ import os
 import torch
 
 from memory import DiskMemory, Memory
-from bots.custom_bot import BotBase
+from bots.single_deck.bot import SingleDeckBot
 
 
 
@@ -19,7 +19,7 @@ def build_params(params_dict=None, params_file=None):
         size=params_dict["memory_size"],
         alpha=params_dict["alpha"],
         beta=params_dict["beta"],
-        beta_decay=params_dict["beta_decay"],
+        beta_decay=params_dict["beta_anneal"],
         min_prob=params_dict["min_sample_prob"],
     )
 
@@ -46,20 +46,15 @@ def build_options(opts_dict=None, opts_file=None):
         with open(opts_file, "r") as f:
             opts_dict = yaml.safe_load(f)
 
-    if "names" in opts_dict:
-        shape_dict, dtype_dict = {}, {}
-        for i, name in enumerate(opts_dict["names"]):
-            shape_dict[name] = opts_dict["shapes"][i]
-            dtype_dict[name] = opts_dict["dtypes"][i]
-    else:
-        shape_dict, dtype_dict = None, None
+    shape_dict = SingleDeckBot.get_shapes()
+    dtype_dict = opts_dict["dtypes"]
 
     disk_memory = DiskMemory(
         file=opts_dict["disk_memory"],
-        data_transform=BotBase.exp_to_dict,
+        data_transform=SingleDeckBot.exp_to_dict,
         shape_dict=shape_dict,
         dtype_dict=dtype_dict,
-        max_size=opts_dict["max_size"] if "max_size" in opts_dict else None,
+        max_size=opts_dict["max_size"],
     )
 
     if opts_dict["logging"] == "print":

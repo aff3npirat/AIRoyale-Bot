@@ -70,6 +70,16 @@ class SingleDeckBot(BotBase):
         self.approx_time = 10
         self.tic = None
 
+    @staticmethod
+    def get_shapes():
+        return {
+            "board": (16, TILES_Y, TILES_X),
+            "context": (NEXT_CARD_END,),
+            "action": (1,),
+            "reward": (1,),
+            "done": (1,),
+        }
+    
     def init_model(self, state_dict):
         self.Q_net.load_state_dict(state_dict)
 
@@ -125,7 +135,7 @@ class SingleDeckBot(BotBase):
 
     @exec_time
     def _get_context(self, numbers, cards):
-        context = torch.zeros((NEXT_CARD_END), dtype=torch.float32)  # time, turret health, elixir, handcards, handcards ready, next handcard
+        context = torch.zeros((NEXT_CARD_END,), dtype=torch.float32)  # time, turret health, elixir, handcards, handcards ready, next handcard
 
         rem_time = numbers["time"]["number"]
         if rem_time >= 0:
