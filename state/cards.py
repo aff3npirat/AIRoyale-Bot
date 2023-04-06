@@ -50,14 +50,14 @@ class BlueCardDetector:
         i = 0
         with open(f'{DATA_DIR}/cards.csv') as f:
             for line in f:
-                name, path, cost = line.strip().replace('"', '').split(',')
+                name, path, cost, troop_type, close_combat = line.strip().replace('"', '').split(',')
                 if name in self.card_names:
                     path = os.path.join(DATA_DIR, path)
                     card = Image.open(path)
                     multi_hash = self._calculate_multi_hash(card)
                     card_hashes[i] = np.tile(np.expand_dims(multi_hash, axis=2), (1, 1, HAND_SIZE))
                     deck_id = self.card_names.index(name)
-                    cards.append({'name': name, 'cost': int(cost), "deck_id": deck_id})
+                    cards.append({'name': name, 'cost': int(cost), "deck_id": deck_id, "type": troop_type, "meele_range": close_combat=="True"})
                     i += 1
 
         # Add the blank card
@@ -65,7 +65,7 @@ class BlueCardDetector:
         card = Image.open(path)
         multi_hash = self._calculate_multi_hash(card)
         card_hashes[-1] = np.tile(np.expand_dims(multi_hash, axis=2), (1, 1, HAND_SIZE))
-        cards.append({'name': 'blank', 'cost': 999, "deck_id": -1})
+        cards.append({'name': 'blank', 'cost': 999, "deck_id": -1, "type": None, "meele_range": None})
 
         return cards, card_hashes
 

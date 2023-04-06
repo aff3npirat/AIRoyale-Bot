@@ -49,6 +49,19 @@ class SingleDeckBot(BotBase):
         self.Q_net = QNet([512+NEXT_CARD_END, 128, 64, 5], activation="sigmoid", bias=True, feature_extractor=False)
         self.Q_net.eval()
 
+        placement_tiles = {}
+        for card in self.card_detector.cards:
+            if card["deck_id"] == -1:
+                continue
+
+            if card["type"] == "spell":
+                tile = "_bridge"
+            else:
+                tile = ""
+        
+        placement_tiles[card["name"]] = f"{self.side}{tile}"
+        self.placement_tiles = placement_tiles
+
         self.towers_destroyed = {k: False for k in ["enemy_king_hp", "ally_king_hp", f"{side}_ally_princess_hp", f"{side}_enemy_princess_hp"]}
         self.towers_unhit = {k: True for k in self.towers_destroyed}
         self.king_levels = king_levels if king_levels is not None else {"ally": 1, "enemy": 1}
@@ -265,11 +278,13 @@ class SingleDeckBot(BotBase):
         
         action -= 1
         names = [card["name"] for card in self.handcards]
-        slot_idx = names.index(self.sorted_handcards[action]["name"])
+        name = self.sorted_handcards[action]["name"]
+        slot_idx = names.index(name)
+        tile = self.placement_tiles[name]
         
         self.last_expense = self.handcards[slot_idx]["cost"]
         
-        self.controller.select_place_unit(slot_idx, self.side)
+        self.controller.select_place_unit(slot_idx, tile)
 
     @exec_time
     def run(self, eps):
