@@ -187,7 +187,6 @@ class Trainer:
         self.tic = time.time()
 
         self.main_net = self.main_net.to(self.device)
-        self.target_net = self.target_net.to(self.device)
 
         for i in range(num_games):
             self.logger(f"Starting game {i+1}/{num_games}")

@@ -4,6 +4,8 @@ import subprocess
 from multiprocessing import Process, Queue
 from argparse import ArgumentParser
 
+import torch
+
 import timing
 from emulator import Controller, ScreenDetector
 from utils import seed_all
@@ -143,6 +145,10 @@ if __name__ == "__main__":
 
     os.makedirs(args.out, exist_ok=True)
 
+    weights = None
+    if args.net is not None:
+        weights = torch.load(args.net)
+
     run(
         n_games=args.n,
         output=args.out,
@@ -152,7 +158,7 @@ if __name__ == "__main__":
         number_model=args.num_model,
         side_model=args.side_model,
         eps=args.eps,
-        network=args.net,
+        network=weights,
     )
 
     subprocess.run(f"{ADB_PATH} kill-server")
