@@ -212,14 +212,15 @@ class Trainer:
             self.disk_memory.add(episodes)
 
             self.logger(f"Stored experience, memory-size: {len(self.memory)/self.memory.size}")
-
-            num_batches = len(episodes)//self.batch_size
-            if len(episodes)%self.batch_size != 0:
-                num_batches += 1
-
             self.logger(f"Training on {len(episodes)} new experiences")
 
+            num_batches = len(episodes)//self.batch_size
             self.train(batch_size=self.batch_size, num_batches=num_batches, device=self.device)  # train on new experience
+
+            partial_batch = len(episodes)%self.batch_size
+            if partial_batch > 0:
+                self.train(batch_size=partial_batch, num_batches=1, device=self.device)  # train on new experience
+
             if self.memory.is_full():
                 self.logger("Training on past experience")
                 self.train(batch_size=self.batch_size, num_batches=1, device=self.device, shuffle=False)  # train on random experience
