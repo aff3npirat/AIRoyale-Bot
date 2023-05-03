@@ -1,12 +1,12 @@
-from emulator import Controller, ScreenDetector
+from device import Controller, ScreenDetector
 from constants import CARD_HEIGHT, CARD_WIDTH, CARD_CONFIG
 
 
 
 class BotBase:
 
-    def __init__(self, hash_size=8, port=5555):
-        self.controller = Controller(port=port)
+    def __init__(self, hash_size=8, device=5555):
+        self.controller = Controller(device=device)
         self.screen = ScreenDetector(hash_size)
 
         self.replay_buffer = []

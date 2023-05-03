@@ -31,8 +31,8 @@ class SingleDeckBot(BotBase):
     Can only see 8 different cards, that are all in his deck.
     """
 
-    def __init__(self, team, unit_model_path, number_model_path, side_model_path, deck_names, hash_size=8, king_levels=None, port=5555):
-        super().__init__(hash_size=hash_size, port=port)
+    def __init__(self, team, unit_model_path, number_model_path, side_model_path, deck_names, hash_size=8, king_levels=None, device=5555):
+        super().__init__(hash_size=hash_size, device=device)
 
         if team == "blue":
             side = "left"
@@ -371,11 +371,11 @@ def debug(id, team, port):
         number_model_path="./models/number_cpu.onnx",
         side_model_path="./models/side_cpu.onnx",
         deck_names=deck_names,
-        port=port,
+        device=port,
     )
 
     bot_logger.info(f"Ally units={bot.unit_detector.ally_units}")
-    bot_logger.inof(f"Placement tiles={bot.placement_tiles}")
+    bot_logger.info(f"Placement tiles={bot.placement_tiles}")
 
     font = ImageFont.load_default()
 
@@ -556,12 +556,12 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
     
     parser = ArgumentParser()
-    parser.add_argument("--port", type=int, default=5555)
+    parser.add_argument("--device", type=int, default=5555)
     parser.add_argument("--team", type=str, default="blue")
     parser.add_argument("--id", type=str, default="")
     args = parser.parse_args()
 
-    port = args.port
+    device = args.device
     team = args.team
     id_ = args.id
-    debug(id_, team, port)
+    debug(id_, team, device)

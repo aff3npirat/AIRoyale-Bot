@@ -30,7 +30,7 @@ def n_step_return(n, memory, start_idx, discount):
 
 class Trainer:
 
-    def __init__(self, hparams, ports, options, checkpoint=None):
+    def __init__(self, hparams, devices, options, checkpoint=None):
         self.device = options["device"]
         self.cp_freq = options["checkpoint_frequency"]  # number of games
         self.output = options["output"]
@@ -38,7 +38,7 @@ class Trainer:
 
         self.logger = options["logger"]
 
-        self.ports = ports
+        self.devices = devices
         self.weight_decay = hparams["weight_decay"]
         self.batch_size = hparams["batch_size"]
         self.discount = hparams["discount"]
@@ -152,7 +152,7 @@ class Trainer:
             n_step_board = n_step_board.to(device)
             n_step_context = n_step_context.to(device)
             board = board.to(device)
-            context = context.to(device)    
+            context = context.to(device)
             with torch.no_grad():
                 state_n_step = (n_step_board, n_step_context)
                 action_n_step = self.main_net(state_n_step)
@@ -197,7 +197,7 @@ class Trainer:
                 n_games=1,
                 output=self.output,
                 deck_names=self.deck_names,
-                ports=self.ports,
+                devices=self.devices,
                 unit_model=self.unit_model,
                 side_model=self.side_model,
                 number_model=self.number_model,
@@ -244,7 +244,7 @@ if __name__ == "__main__":
     parser.add_argument("--params", type=str)
     parser.add_argument("--n", type=int)
     parser.add_argument("--resume", type=str, default=None)
-    parser.add_argument("--ports", nargs=2, type=int)
+    parser.add_argument("--devices", nargs=2, type=int)
 
     args = parser.parse_args()
 
@@ -264,13 +264,13 @@ if __name__ == "__main__":
     init_logging(os.path.join(out_dir, "timing.log"))
 
     subprocess.run(f"{ADB_PATH} start-server")
-    for port in args.ports:
-        subprocess.run(f"{ADB_PATH} connect localhost:{port}")
+    for device in args.devices:
+        subprocess.run(f"{ADB_PATH} connect localhost:{device}")
 
     trainer = Trainer(
         hparams=params,
         options=options,
-        ports=args.ports,
+        devices=args.devices,
         checkpoint=args.resume,
     )
 

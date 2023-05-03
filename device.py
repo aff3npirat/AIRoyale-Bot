@@ -83,8 +83,8 @@ class ScreenDetector:
 
 class Controller:
 
-    def __init__(self, port):
-        self.device = f"localhost:{port}"
+    def __init__(self, device):
+        self.device = device
         self.width, self.height = get_window_size(self.device)
 
     @exec_time

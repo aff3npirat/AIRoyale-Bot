@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 import torch
 
 import timing
-from emulator import Controller, ScreenDetector
+from device import Controller, ScreenDetector
 from utils import seed_all
 from bots.single_deck.bot import SingleDeckBot
 from constants import TOWER_HP_BOXES, PRINCESS_Y_OFFSET, ADB_PATH
@@ -20,7 +20,7 @@ def run_bot(
     number_model,
     deck_names,
     team,
-    port,
+    device,
     queue,
     output,
     eps,
@@ -36,7 +36,7 @@ def run_bot(
         if "princess" in name:
             TOWER_HP_BOXES[i][1] = (x1, y1-PRINCESS_Y_OFFSET, x2, y2-PRINCESS_Y_OFFSET)
 
-    bot = SingleDeckBot(team, unit_model, number_model, side_model, deck_names, king_levels={"ally": 11, "enemy": 11}, port=port)
+    bot = SingleDeckBot(team, unit_model, number_model, side_model, deck_names, king_levels={"ally": 11, "enemy": 11}, device=device)
 
     if network is not None:
         bot.init_model(network)
@@ -52,14 +52,14 @@ def run_bot(
     queue.put(experience)
 
 
-def play_single_game(output, deck_names, ports, unit_model, side_model, number_model, eps, network):
+def play_single_game(output, deck_names, devices, unit_model, side_model, number_model, eps, network):
     TEAMS = ["blue", "red"]
 
-    num_bots = len(ports)
+    num_bots = len(devices)
 
     # send 1v1 invite
     for i in range(0, num_bots, 2):
-        Controller(ports[i]).send_clan_1v1()
+        Controller(devices[i]).send_clan_1v1()
 
     # start processes
     out_queue = Queue()
@@ -69,7 +69,7 @@ def play_single_game(output, deck_names, ports, unit_model, side_model, number_m
         number_model,
         deck_names,
         TEAMS[i],
-        ports[i],
+        devices[i],
         out_queue,
         output,
         eps,
@@ -92,7 +92,7 @@ def play_single_game(output, deck_names, ports, unit_model, side_model, number_m
     return experiences
 
 
-def run(n_games, output, deck_names, ports, unit_model, side_model, number_model, eps, network):
+def run(n_games, output, deck_names, devices, unit_model, side_model, number_model, eps, network):
     episodes = []
     for _ in range(n_games):
         episode = play_single_game(
@@ -102,7 +102,7 @@ def run(n_games, output, deck_names, ports, unit_model, side_model, number_model
             number_model=number_model,
             side_model=side_model,
             eps=eps,
-            ports=ports,
+            devices=devices,
             network=network
         )
 
@@ -111,9 +111,9 @@ def run(n_games, output, deck_names, ports, unit_model, side_model, number_model
 
         episodes.extend(episode)  # list of tuples (state, action, reward, done)
 
-        for port in ports:
-            screen = ScreenDetector(port)
-            controller = Controller(port)
+        for device in devices:
+            screen = ScreenDetector(device)
+            controller = Controller(device)
             img = controller.take_screenshot()
             while not screen.detect_game_screen(img, "clan"):
                 img = controller.take_screenshot()
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("deck", type=str, nargs=8)
     parser.add_argument("--out", type=str, required=True)
-    parser.add_argument("--ports", type=int, nargs="+", default=[5555, 5575])
+    parser.add_argument("--devices", type=int, nargs="+", default=[5555, 5575])
     parser.add_argument("--unit-model", type=str, default="./models/units_singledeck_cpu.onnx")
     parser.add_argument("--num-model", type=str, default="./models/number_cpu.onnx")
     parser.add_argument("--side-model", type=str, default="./models/side_cpu.onnx")
@@ -135,13 +135,13 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if len(args.ports)%2 == 1:
-        raise ValueError(f"Number of ports must be multiplicative of 2, got {len(args.ports)}")
+    if len(args.devices)%2 == 1:
+        raise ValueError(f"Number of devices must be multiplicative of 2, got {len(args.devices)}")
     
     # initialize adb
     subprocess.run(f"{ADB_PATH} start-server")
-    for port in args.ports:
-        subprocess.run(f"{ADB_PATH} connect localhost:{port}")
+    for device in args.devices:
+        subprocess.run(f"{ADB_PATH} connect {device}")
 
     os.makedirs(args.out, exist_ok=True)
 
@@ -152,7 +152,7 @@ if __name__ == "__main__":
     run(
         n_games=args.n,
         output=args.out,
-        ports=args.ports,
+        devices=args.devices,
         deck_names=args.deck,
         unit_model=args.unit_model,
         number_model=args.num_model,
