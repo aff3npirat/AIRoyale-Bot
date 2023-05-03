@@ -322,7 +322,7 @@ class SingleDeckBot(BotBase):
         return victory
     
 
-def debug(id, team, port):
+def debug(id, team, device):
     import os
     import logging
     import time
@@ -371,7 +371,7 @@ def debug(id, team, port):
         number_model_path="./models/number_cpu.onnx",
         side_model_path="./models/side_cpu.onnx",
         deck_names=deck_names,
-        device=port,
+        device=device,
     )
 
     bot_logger.info(f"Ally units={bot.unit_detector.ally_units}")
