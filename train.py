@@ -5,7 +5,6 @@ import subprocess
 from argparse import ArgumentParser
 
 import torch
-import yaml
 
 import play
 from bots.single_deck.nn import QNet
@@ -157,7 +156,10 @@ class Trainer:
             with torch.no_grad():
                 state_n_step = (n_step_board, n_step_context)
                 action_n_step = self.main_net(state_n_step)
-                action_n_step[SingleDeckBot.get_illegal_actions(state_n_step)]
+                #  mask out all illegal actions
+                for i, state_n_step_ in enumerate(state_n_step):
+                    action_n_step[i][SingleDeckBot.get_illegal_actions(state_n_step_)] = -torch.inf
+
                 action_n_step = torch.argmax(action_n_step, dim=1)
                 q_n_step = self.target_net(state_n_step)[action_n_step]
                 discounted_rewards += (1-dones)*q_n_step*torch.pow(self.discount, actual_n)
