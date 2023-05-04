@@ -331,7 +331,7 @@ def debug(id, team, device):
     from PIL import ImageDraw, ImageFont, Image
 
     import timing
-    from constants import TILE_WIDTH, TILE_HEIGHT, TOWER_HP_BOXES, CARD_CONFIG, SCREEN_CONFIG, PRINCESS_Y_OFFSET
+    from constants import TILE_WIDTH, TILE_HEIGHT, TOWER_HP_BOXES, CARD_CONFIG, SCREEN_CONFIG
 
     UNIT_NAMES = [
         'archer',
@@ -343,11 +343,6 @@ def debug(id, team, device):
         'musketeer',
         'speargoblin',
     ]
-
-    for i, (name, (x1, y1, x2, y2)) in enumerate(TOWER_HP_BOXES):
-        if "princess" in name:
-            TOWER_HP_BOXES[i][1] = (x1, y1-PRINCESS_Y_OFFSET, x2, y2-PRINCESS_Y_OFFSET)
-
 
     OUTPUT = f"./output/debug/single_deck_bot_{id}"
     if not os.path.exists(OUTPUT):

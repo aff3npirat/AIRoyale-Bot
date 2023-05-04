@@ -67,7 +67,6 @@ class NumberDetector(OnnxDetector):
     
     @staticmethod
     def preprocess(image):
-        # Resize the image
         image = image.convert("L")
         image = image.resize((NUMBER_WIDTH, NUMBER_HEIGHT), Image.Resampling.BICUBIC)
 

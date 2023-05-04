@@ -10,7 +10,7 @@ import timing
 from device import Controller, ScreenDetector
 from utils import seed_all
 from bots.single_deck.bot import SingleDeckBot
-from constants import TOWER_HP_BOXES, PRINCESS_Y_OFFSET, ADB_PATH
+from constants import TOWER_HP_BOXES, ADB_PATH
 
 
 
@@ -31,10 +31,6 @@ def run_bot(
     timing.init_logging(os.path.join(output, f"time_{pid}.log"))
 
     seed_all(pid)
-
-    for i, (name, (x1, y1, x2, y2)) in enumerate(TOWER_HP_BOXES):
-        if "princess" in name:
-            TOWER_HP_BOXES[i][1] = (x1, y1-PRINCESS_Y_OFFSET, x2, y2-PRINCESS_Y_OFFSET)
 
     bot = SingleDeckBot(team, unit_model, number_model, side_model, deck_names, king_levels={"ally": 11, "enemy": 11}, device=device)
 
