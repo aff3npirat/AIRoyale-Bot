@@ -36,10 +36,10 @@ class SingleDeckBot(BotBase):
 
         if team == "blue":
             side = "left"
-            tile_x = 4
+            tile_x = 3
         else:
             side = "right"
-            tile_x = 15
+            tile_x = 14
 
         self.side = side
 
@@ -57,9 +57,9 @@ class SingleDeckBot(BotBase):
                 continue
 
             if card["type"] == "spell":
-                tile_y = 15
+                tile_y = 14
             else:
-                tile_y = 22
+                tile_y = 21
         
             placement_tiles[card["name"]] = (tile_x, tile_y)
         self.placement_tiles = placement_tiles
