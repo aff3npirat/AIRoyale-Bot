@@ -16,6 +16,7 @@ from constants import (
     CLAN_1V1_ACCEPT,
     SCREEN_CONFIG,
     DATA_DIR,
+    CARD_CONFIG,
 )
 
 
@@ -86,6 +87,14 @@ class Controller:
     def __init__(self, device):
         self.device = device
         self.width, self.height = get_window_size(self.device)
+
+    @staticmethod
+    def slot_to_xy(slot_idx):
+        x1, y1, x2, y2 = CARD_CONFIG[slot_idx+1]
+        x = x1 + (x2 - x1)/2
+        y = y1 + (y2 - y1)/2
+
+        return x, y
 
     @exec_time
     def click(self, x, y):

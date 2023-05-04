@@ -36,8 +36,10 @@ class SingleDeckBot(BotBase):
 
         if team == "blue":
             side = "left"
+            tile_x = 4
         else:
             side = "right"
+            tile_x = 15
 
         self.side = side
 
@@ -55,11 +57,11 @@ class SingleDeckBot(BotBase):
                 continue
 
             if card["type"] == "spell":
-                tile = "_bridge"
+                tile_y = 15
             else:
-                tile = ""
+                tile_y = 22
         
-            placement_tiles[card["name"]] = f"{self.side}{tile}"
+            placement_tiles[card["name"]] = (tile_x, tile_y)
         self.placement_tiles = placement_tiles
 
         self.towers_destroyed = {k: False for k in ["enemy_king_hp", "ally_king_hp", f"{side}_ally_princess_hp", f"{side}_enemy_princess_hp"]}
@@ -289,12 +291,13 @@ class SingleDeckBot(BotBase):
         action -= 1
         names = [card["name"] for card in self.handcards]
         name = self.sorted_handcards[action]["name"]
-        slot_idx = names.index(name)
-        tile = self.placement_tiles[name]
         
+        slot_idx = names.index(name)
         self.last_expense = self.handcards[slot_idx]["cost"]
         
-        self.controller.select_place_unit(slot_idx, tile)
+        self.controller.click(*self.controller.slot_to_xy(slot_idx))
+        x, y = UnitDetector.tile_to_xy(*self.placement_tiles[name])
+        self.controller.click(x, y)
 
     @exec_time
     def run(self, eps):
