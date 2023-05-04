@@ -123,8 +123,8 @@ class Controller:
 
     @exec_time
     def select_place_unit(self, slot_idx, tile):
-        select = f"dd bs=160 if=/mnt/sdcard/slot{slot_idx+1} of=/dev/input/event5"
+        select = f"dd bs=160 if=/sdcard/slot{slot_idx+1} of=/dev/input/event5"
         wait = "busybox usleep 20000"
-        place = f"dd bs=160 if=/mnt/sdcard/tile_{tile} of=/dev/input/event5"
+        place = f"dd bs=160 if=/sdcard/tile_{tile} of=/dev/input/event5"
         subprocess.run(rf"{ADB_PATH} -s {self.device} shell {select}; {wait}; {place}", stderr=subprocess.DEVNULL)
 
