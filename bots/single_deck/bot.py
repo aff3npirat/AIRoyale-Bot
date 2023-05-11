@@ -241,7 +241,7 @@ class SingleDeckBot(BotBase):
             elixir_gain /= 3
 
         if self.last_expense > 0:
-            self.elixir = self.elixir - self.last_expense + seconds_elapsed/elixir_gain
+            self.elixir = min(self.elixir - self.last_expense + seconds_elapsed/elixir_gain, 10)
         else:
             self.elixir = numbers["elixir"]["number"]
         for i in range(4):
