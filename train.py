@@ -244,7 +244,7 @@ if __name__ == "__main__":
     parser.add_argument("--params", type=str)
     parser.add_argument("--n", type=int)
     parser.add_argument("--resume", type=str, default=None)
-    parser.add_argument("--devices", nargs=2, type=int)
+    parser.add_argument("--devices", nargs=2, type=str)
 
     args = parser.parse_args()
 

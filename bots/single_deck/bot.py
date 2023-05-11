@@ -554,7 +554,7 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
     
     parser = ArgumentParser()
-    parser.add_argument("--device", type=int, default=5555)
+    parser.add_argument("--device", type=str, default=5555)
     parser.add_argument("--team", type=str, default="blue")
     parser.add_argument("--id", type=str, default="")
     args = parser.parse_args()
