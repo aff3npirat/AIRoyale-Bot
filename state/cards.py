@@ -79,7 +79,13 @@ class BlueCardDetector:
         crops = [image.crop(position) for position in CARD_CONFIG]
         crop_hashes = np.array([self._calculate_hash(crop) for crop in crops]).T
         hash_diffs = np.mean(np.amin(np.abs(crop_hashes - self.card_hashes), axis=1), axis=1).T
-        _, idx = scipy.optimize.linear_sum_assignment(hash_diffs)
+        _, idx = scipy.optimize.linear_sum_assignment(hash_diffs)  # ignore blanks
+        
+        min_idxs = np.argmin(hash_diffs, axis=1)
+        for i in range(HAND_SIZE):
+            if min_idxs[i] == 8:  # min diff for blank
+                idx[i] = 8
+
         cards = [self.cards[i] for i in idx]
 
         return cards, crops
