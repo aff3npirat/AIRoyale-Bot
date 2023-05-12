@@ -69,7 +69,7 @@ class SingleDeckBot(BotBase):
         self.king_levels = king_levels if king_levels is not None else {"ally": 1, "enemy": 1}
         
         self.last_expense = 0
-        self.approx_time = 10
+        self.approx_time = None
         self.tic = None
 
     @staticmethod
@@ -217,8 +217,6 @@ class SingleDeckBot(BotBase):
         else:
             seconds_elapsed = time.time() - self.tic
         self.tic = time.time()
-        
-        self.approx_time += seconds_elapsed
 
         units = self.unit_detector.run(image)  # label, tile, side
         numbers = self.number_detector.run(image)
@@ -227,6 +225,12 @@ class SingleDeckBot(BotBase):
         overtime = self.screen.detect_game_screen(image, "overtime")
 
         remaining_seconds = numbers["time"]["number"]
+
+        if self.approx_time is None and remaining_seconds != -1:
+            self.approx_time = 180 - remaining_seconds
+
+        self.approx_time += seconds_elapsed
+
         if remaining_seconds == -1:
             remaining_seconds = 180 - self.approx_time
         elif overtime:
