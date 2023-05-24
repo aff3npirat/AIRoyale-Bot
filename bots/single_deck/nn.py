@@ -49,10 +49,9 @@ class BoardEmbedding(nn.Module):
 
     @exec_time
     def forward(self, x):
-        x = x.unsqueeze(0)
         x = self.blocks(x)
         x = self.downsample(x)
-        x = x.flatten(0)
+        x = x.flatten(1)
         x = self.linear(x)
         return x
     
@@ -102,7 +101,8 @@ class DenseNet(nn.Module):
 
     @exec_time
     def forward(self, x):
-        return self.layers(x.unsqueeze(0)).squeeze(0)
+        out = self.layers(x)
+        return out
 
 
 class QNet(nn.Module):
@@ -115,6 +115,18 @@ class QNet(nn.Module):
 
     def forward(self, x):
         board, context = x
+
+        squeeze = (len(board.shape)==3) and (len(context.shape)==1)
+        if len(board.shape) == 3:
+            board = board.unsqueeze(0)
+        if len(context.shape) == 1:
+            context = context.unsqueeze(0)
+
         board = self.board_emb(board)
         context = torch.cat((board, context), dim=-1)
-        return self.val_net(context)
+        qval = self.val_net(context)
+
+        if squeeze:
+            qval = qval.squeeze(0)
+        
+        return qval
