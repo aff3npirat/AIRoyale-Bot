@@ -1,3 +1,5 @@
+import os
+
 import h5py
 import torch
 
@@ -12,6 +14,8 @@ class DiskMemory:
             with h5py.File(file, "r") as fout:
                 pass
         except FileNotFoundError:
+            os.makedirs(os.path.abspath(os.path.join(file, "..")), exist_ok=True)
+
             with h5py.File(file, "w-") as fout:
                 fout.attrs["groups"] = 0
                 fout.attrs["group_size"] = max_size
@@ -126,10 +130,13 @@ class Memory:
             entries = entries[-self.size:]
 
         new_index = len(entries) + self.data_index
+
+        if not self.full and new_index >= self.size:
+            self.full = True
+
         if new_index <= self.size:
             self._safe_add(entries)
         else:
-            self.full = True
             overflow = new_index - self.size
             self._safe_add(entries[:-overflow])
             self._safe_add(entries[-overflow:])
@@ -146,6 +153,9 @@ class Memory:
             return self.size
         else:
             return self.data_index
+        
+    def num_new_data(self):
+        return len(self.new_data)
         
     def __getitem__(self, index):
         if not (0 <= index < self.__len__()):

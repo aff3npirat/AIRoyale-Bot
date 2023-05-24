@@ -1,4 +1,5 @@
 import os
+import shutil
 import copy
 import time
 import subprocess
@@ -208,10 +209,12 @@ class Trainer:
             self.game_count += 1
             self.logger(f"Finished game {i+1}/{num_games}, total game count {self.game_count}")
 
+            self.logger("Storing in replay memory...")
             self.memory.add(episodes)
+            self.logger("Storing on disk...")
             self.disk_memory.add(episodes)
 
-            self.logger(f"Stored experience, memory-size: {len(self.memory)/self.memory.size}")
+            self.logger(f"Stored experience, memory-size: {len(self.memory)}/{self.memory.size}")
             self.logger(f"Training on {len(episodes)} new experiences")
 
             num_batches = len(episodes)//self.batch_size
@@ -225,11 +228,11 @@ class Trainer:
                 self.logger("Training on past experience")
                 self.train(batch_size=self.batch_size, num_batches=1, device=self.device, shuffle=False)  # train on random experience
 
-            self.eps *= self.eps_decay
-            self.logger(f"New epsilon: {self.eps}")
+                self.eps *= self.eps_decay
+                self.logger(f"New epsilon: {self.eps}")
 
-            self.lr_decay.step(self.game_count)
-            self.logger(f"New learningrate: {self.optim.param_groups()[0]['lr']}")
+                self.lr_decay.step(self.game_count)
+                self.logger(f"New learningrate: {self.optim.param_groups()[0]['lr']}")
 
             if self.game_count%self.cp_freq == 0:
                 self.checkpoint(f"game_{self.game_count}.pt")
@@ -254,18 +257,16 @@ if __name__ == "__main__":
     out_dir = options["output"]
     os.makedirs(out_dir, exist_ok=True)
 
-    with open(os.path.join(out_dir, "options.yaml", "wt")) as f:
-        for key in options:
-            f.write(f"{key}: {options[key]}\n")
-    with open(os.path.join(out_dir, "hparams.yaml", "wt")) as f:
-        for key in params:
-            f.write(f"{key}: {params[key]}\n")
+    if os.path.abspath(os.path.join(args.opt, "..")) != os.path.abspath(out_dir):
+        shutil.copy(args.opt, os.path.join(out_dir, "options.yaml"))
+    if os.path.abspath(os.path.join(args.params, "..")) != os.path.abspath(out_dir):
+        shutil.copy(args.params, os.path.join(out_dir, "hparams.yaml"))
 
     init_logging(os.path.join(out_dir, "timing.log"))
 
     subprocess.run(f"{ADB_PATH} start-server")
     for device in args.devices:
-        subprocess.run(f"{ADB_PATH} connect localhost:{device}")
+        subprocess.run(f"{ADB_PATH} connect {device}")
 
     trainer = Trainer(
         hparams=params,
