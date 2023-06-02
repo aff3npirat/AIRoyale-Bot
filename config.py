@@ -55,18 +55,17 @@ def build_options(opts_dict=None, opts_file=None):
         max_size=opts_dict["max_size"],
     )
 
-    if opts_dict["logging"] == "print":
+    if opts_dict["logging"] != "none":
         logger = logging.getLogger()
         logger.setLevel(logging.INFO)
         handler_stream = logging.StreamHandler(sys.stdout)
         logger.addHandler(handler_stream)
-    else:
-        os.makedirs(opts_dict["output"], exist_ok=True)
 
-        logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
-        handler_file = logging.FileHandler(opts_dict["logging"], mode=opts_dict["logging_mode"])
-        logger.addHandler(handler_file)
+        if opts_dict["logging"] != "print":
+            os.makedirs(opts_dict["output"], exist_ok=True)
+
+            handler_file = logging.FileHandler(opts_dict["logging"], mode=opts_dict["logging_mode"])
+            logger.addHandler(handler_file)
 
     new_dict = {
         "disk_memory": disk_memory,

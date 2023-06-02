@@ -230,6 +230,8 @@ class Trainer:
                 self.train(batch_size=self.batch_size, num_batches=1, device=self.device, shuffle=False)  # train on random experience
 
                 self.eps *= self.eps_decay
+                if self.eps < 0.001:
+                    self.eps = 0
                 logging.info(f"New epsilon: {self.eps}")
 
                 self.lr_decay.step(self.game_count)
