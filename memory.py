@@ -8,6 +8,54 @@ from timing import exec_time
 
 
 
+class MemoryIterator:
+
+    def __init__(self, fpath, names):
+        if isinstance(names, str):
+            names = [names]
+
+        with h5py.File(fpath, "r") as file:
+            self.groups = file.attrs["groups"]
+            self.group_size = file.attrs["group_size"]
+            self.names = names
+            self.last_group_idx = file[f"{self.groups}"].attrs["data_pointer"]
+
+            if self.last_group_idx > self.group_size:
+                raise ValueError(f"Invalid group size, expected {self.group_size} got {self.last_group_idx}")
+
+            for name in names:
+                if name not in file.attrs["names"]:
+                    raise ValueError(f"Could not find key {name}, expected one of {self.names}")
+                
+        self.curr_group = 0
+        self.curr_idx = 0
+        self.path = fpath
+
+    def __enter__(self):
+        self.file = h5py.File(self.path, "r")
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.file.close()
+
+    def __iter__(self):
+        return self
+    
+    def __next__(self):
+        if self.curr_group == self.groups and self.curr_idx > self.last_group_idx:
+            raise StopIteration
+
+        items = []
+        for name in self.names:
+            items.append(self.file[f"{self.curr_group}/{name}"][self.curr_idx])
+
+        self.curr_idx += 1
+        if self.curr_idx == self.group_size:
+            self.curr_group += 1
+            self.curr_idx = 0
+
+        return items if len(items) > 1 else items[0]
+
+
 class DiskMemory:
 
     def __init__(self, file, shape_dict, dtype_dict, data_transform, max_size=2**16):
