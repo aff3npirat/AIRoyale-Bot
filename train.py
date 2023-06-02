@@ -91,9 +91,11 @@ class Trainer:
         self.lr_decay.step(self.game_count)
 
     def checkpoint(self, name):
-        path = os.path.join(self.output, "checkpoints", name)
+        path = os.path.join(self.output, "checkpoints")
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=False)
+
+        path = os.path.join(path, name)
 
         self.time_elapsed += time.time() - self.tic
         self.tic = time.time()
