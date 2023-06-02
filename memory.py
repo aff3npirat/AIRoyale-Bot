@@ -1,4 +1,5 @@
 import os
+import logging
 
 import h5py
 import torch
@@ -100,6 +101,9 @@ class Memory:
             del self.new_data[:num_samples]
             
             weights = torch.ones(len(idxs))
+
+            if len(idxs) < num_samples:
+                logging.warning(f"Not enough new data for full batch, expected {num_samples} new entries, got {len(idxs)}")
         else:
             idxs = torch.multinomial(probs, num_samples=num_samples, replacement=False).tolist()
             weights = (1/(probs[idxs]*self.size))**self.beta

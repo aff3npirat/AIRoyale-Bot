@@ -2,6 +2,7 @@ import yaml
 import torch
 import logging
 import os
+import sys
 
 import torch
 
@@ -55,9 +56,10 @@ def build_options(opts_dict=None, opts_file=None):
     )
 
     if opts_dict["logging"] == "print":
-        log_fn = print
-    elif opts_dict["logging"] is None:
-        log_fn = lambda x: None
+        logger = logging.getLogger()
+        logger.setLevel(logging.INFO)
+        handler_stream = logging.StreamHandler(sys.stdout)
+        logger.addHandler(handler_stream)
     else:
         os.makedirs(opts_dict["output"], exist_ok=True)
 
@@ -65,12 +67,10 @@ def build_options(opts_dict=None, opts_file=None):
         logger.setLevel(logging.INFO)
         handler_file = logging.FileHandler(opts_dict["logging"], mode=opts_dict["logging_mode"])
         logger.addHandler(handler_file)
-        log_fn = logger.info
 
     new_dict = {
         "disk_memory": disk_memory,
         "device": torch.device(opts_dict["device"]),
-        "logger": log_fn,
     }
 
     to_copy = [

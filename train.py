@@ -3,6 +3,7 @@ import shutil
 import copy
 import time
 import subprocess
+import logging
 from argparse import ArgumentParser
 
 import torch
@@ -36,8 +37,6 @@ class Trainer:
         self.cp_freq = options["checkpoint_frequency"]  # number of games
         self.output = options["output"]
         self.disk_memory = options["disk_memory"]
-
-        self.logger = options["logger"]
 
         self.devices = devices
         self.weight_decay = hparams["weight_decay"]
@@ -75,7 +74,7 @@ class Trainer:
             self.update_count = cp["delta_count"]
             self.time_elapsed = cp["training_time"]
 
-            self.logger(f"Loaded checkpoint '{checkpoint}'")
+            logging.info(f"Loaded checkpoint '{checkpoint}'")
 
         self.main_net = QNet([512+NEXT_CARD_END, 128, 64, 5], activation="sigmoid", bias=True, feature_extractor=False)
         if checkpoint is not None:
@@ -114,7 +113,7 @@ class Trainer:
         torch.save(cp, path)
 
     def update_target_net(self):
-        self.logger("Updating target net")
+        logging.info("Updating target net")
 
         self.target_net = copy.deepcopy(self.main_net)
         self.target_net.eval()
@@ -124,13 +123,14 @@ class Trainer:
         for b in range(num_batches):
             batch, idxs, is_weights = self.memory.sample(batch_size, shuffle=shuffle)  # list of tuples ((board, context), action, reward, done)
 
-            self.logger(f"Collecting n-step-return for batch {b}/{num_batches}")
+            board = torch.stack([batch[i][0][0] for i in range(batch_size)], dim=0)
+            context = torch.stack([batch[i][0][1] for i in range(batch_size)], dim=0)
+            action = torch.tensor([batch[i][1] for i in range(batch_size)], dtype=torch.int64)
 
-            board = torch.empty((batch_size, *batch[0][0][0].shape))
-            context = torch.empty((batch_size, *batch[0][0][1].shape))
-            action = torch.empty(batch_size)
-            n_step_board = torch.empty((batch_size, *batch[0][0][0].shape))
-            n_step_context = torch.empty((batch_size, *batch[0][0][1].shape))
+            logging.info(f"Collecting n-step-return for batch {b}/{num_batches}")
+
+            n_step_board = torch.zeros((batch_size, *batch[0][0][0].shape))
+            n_step_context = torch.zeros((batch_size, *batch[0][0][1].shape))
             dones = torch.empty(batch_size)
             discounted_rewards = torch.empty(batch_size)
             actual_n = torch.empty(batch_size)
@@ -141,13 +141,13 @@ class Trainer:
                 if self.memory[last_idx][3]:  # done
                     dones[i] = 1.0
                 else:
-                    state_n_step = self.memory[last_idx+1%len(self.memory)][0]
+                    state_n_step = self.memory[(last_idx+1)%len(self.memory)][0]
                     
                     n_step_board[i] = state_n_step[0]
                     n_step_context[i] = state_n_step[1]
                     dones[i] = 0.0
                     
-            self.logger(f"Calculating TD-errors for batch {b}/{num_batches}")
+            logging.info(f"Calculating TD-errors for batch {b}/{num_batches}")
 
             discounted_rewards = discounted_rewards.to(device)
             n_step_board = n_step_board.to(device)
@@ -155,24 +155,23 @@ class Trainer:
             board = board.to(device)
             context = context.to(device)
             with torch.no_grad():
-                state_n_step = (n_step_board, n_step_context)
-                action_n_step = self.main_net(state_n_step)
+                action_n_step = self.main_net((n_step_board, n_step_context))
                 #  mask out all illegal actions
-                for i, state_n_step_ in enumerate(state_n_step):
-                    action_n_step[i][SingleDeckBot.get_illegal_actions(state_n_step_)] = -torch.inf
+                for i in range(batch_size):
+                    action_n_step[i][SingleDeckBot.get_illegal_actions((n_step_board[i], n_step_context[i]))] = -torch.inf
 
                 action_n_step = torch.argmax(action_n_step, dim=1)
-                q_n_step = self.target_net(state_n_step)[action_n_step]
+                q_n_step = self.target_net((n_step_board[i], n_step_context[i]))[action_n_step]
                 discounted_rewards += (1-dones)*q_n_step*torch.pow(self.discount, actual_n)
 
             predicted_q = self.main_net((board, context))
             target_q = predicted_q.detach().clone()
-            target_q[action] = discounted_rewards
+            target_q[list(range(batch_size)), action] = discounted_rewards
 
             abs_errors = torch.sum(torch.abs(target_q - predicted_q), dim=1)
 
             loss = torch.mean((abs_errors**2) * is_weights.to(device))
-            self.logger(f"Loss {loss:.4f}, performing backward")
+            logging.info(f"Loss {loss:.4f}, performing backward")
 
             self.optim.zero_grad()
             loss.backward()
@@ -192,7 +191,7 @@ class Trainer:
         self.main_net = self.main_net.to(self.device)
 
         for i in range(num_games):
-            self.logger(f"Starting game {i+1}/{num_games}")
+            logging.info(f"Starting game {i+1}/{num_games}")
 
             episodes = play.run(
                 n_games=1,
@@ -207,32 +206,34 @@ class Trainer:
             )
 
             self.game_count += 1
-            self.logger(f"Finished game {i+1}/{num_games}, total game count {self.game_count}")
+            logging.info(f"Finished game {i+1}/{num_games}, total game count {self.game_count}")
 
-            self.logger("Storing in replay memory...")
+            logging.info("Storing in replay memory...")
             self.memory.add(episodes)
-            self.logger("Storing on disk...")
-            self.disk_memory.add(episodes)
+            logging.info("Storing on disk...")
+            # self.disk_memory.add(episodes)
 
-            self.logger(f"Stored experience, memory-size: {len(self.memory)}/{self.memory.size}")
-            self.logger(f"Training on {len(episodes)} new experiences")
+            logging.info(f"Stored {len(episodes)} experiences, memory-size: {len(self.memory)}/{self.memory.size}")
 
-            num_batches = len(episodes)//self.batch_size
+            N = min(len(episodes), self.memory.size)
+            logging.info(f"Training on {N} new experiences")
+
+            num_batches = N//self.batch_size
             self.train(batch_size=self.batch_size, num_batches=num_batches, device=self.device)  # train on new experience
 
-            partial_batch = len(episodes)%self.batch_size
+            partial_batch = N%self.batch_size
             if partial_batch > 0:
                 self.train(batch_size=partial_batch, num_batches=1, device=self.device)  # train on new experience
 
             if self.memory.is_full():
-                self.logger("Training on past experience")
+                logging.info("Training on past experience")
                 self.train(batch_size=self.batch_size, num_batches=1, device=self.device, shuffle=False)  # train on random experience
 
                 self.eps *= self.eps_decay
-                self.logger(f"New epsilon: {self.eps}")
+                logging.info(f"New epsilon: {self.eps}")
 
                 self.lr_decay.step(self.game_count)
-                self.logger(f"New learningrate: {self.optim.param_groups()[0]['lr']}")
+                logging.info(f"New learningrate: {self.optim.param_groups[0]['lr']}")
 
             if self.game_count%self.cp_freq == 0:
                 self.checkpoint(f"game_{self.game_count}.pt")

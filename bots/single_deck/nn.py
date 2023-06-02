@@ -93,10 +93,10 @@ class DenseNet(nn.Module):
             skip_size += net_arch[i]
 
         # output layer
-        layers.append(
+        layers.extend([
             nn.Linear(skip_size, net_arch[-1], bias=False),
             nn.ReLU(),
-        )
+        ])
 
         self.layers = nn.Sequential(*layers)
 
