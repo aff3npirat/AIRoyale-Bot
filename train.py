@@ -211,7 +211,7 @@ class Trainer:
             logging.info("Storing in replay memory...")
             self.memory.add(episodes)
             logging.info("Storing on disk...")
-            # self.disk_memory.add(episodes)
+            self.disk_memory.add(episodes)
 
             logging.info(f"Stored {len(episodes)} experiences, memory-size: {len(self.memory)}/{self.memory.size}")
 
