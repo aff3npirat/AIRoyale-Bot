@@ -6,7 +6,7 @@ from constants import KING_HP, PRINCESS_HP
 
 
 
-def tail_distribution(*files, output=None, max_reward=101, grid_size=20, linestyle="x-", alpha=0.8):
+def tail_distribution(*files, output=None, max_reward=101, min_reward=-101, grid_size=20, linestyle="x-", alpha=0.8):
     tail_dists = np.empty((grid_size, len(files)))
     
     for i, path in enumerate(files):
@@ -22,17 +22,18 @@ def tail_distribution(*files, output=None, max_reward=101, grid_size=20, linesty
                     episode_reward = 0.0
 
         rewards = np.array(rewards, dtype="f4")
-        grid = np.linspace(0.0, max_reward, grid_size)
+        grid = np.linspace(min_reward, max_reward, grid_size)
         tail_dists[:, i] = np.mean(rewards.reshape(1, -1)>=grid.reshape(grid_size, 1), axis=1, dtype="f4")
 
     fig, ax = plt.subplots(1, 1, layout="constrained", figsize=(20, 20))
-    ax.plot(grid_size, tail_dists, linestyle, alpha=alpha)
+    ax.plot(grid, tail_dists, linestyle, alpha=alpha, label=path)
     ax.set(
         ylim=(0.0, max_reward),
         ylabel="Avg. runs with 'reward > r'",
         xticks=(grid),
         xlabel="Reward 'r'",
     )
+    ax.legend()
 
     if output is None:
         fig.show()

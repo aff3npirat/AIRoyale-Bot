@@ -27,12 +27,13 @@ class MemoryIterator:
                 if name not in file.attrs["names"]:
                     raise ValueError(f"Could not find key {name}, expected one of {self.names}")
                 
-        self.curr_group = 0
+        self.curr_group = 1
         self.curr_idx = 0
         self.path = fpath
 
     def __enter__(self):
         self.file = h5py.File(self.path, "r")
+        return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.file.close()
