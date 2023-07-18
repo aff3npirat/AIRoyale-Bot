@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from memory import MemoryIterator
-from constants import KING_HP, PRINCESS_HP
 
 
 
