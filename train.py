@@ -187,7 +187,7 @@ class Trainer:
             if self.update_count%self.delta == 0:
                 self.update_target_net()
     
-    def run(self, num_games):
+    def run(self, num_games, random_bot=False):
         self.tic = time.time()
 
         self.main_net = self.main_net.to(self.device)
@@ -205,6 +205,7 @@ class Trainer:
                 number_model=self.number_model,
                 eps=self.eps,
                 network=self.main_net.cpu().state_dict(),
+                random_bot=random_bot,
             )
 
             self.game_count += 1
@@ -253,6 +254,7 @@ if __name__ == "__main__":
     parser.add_argument("--n", type=int)
     parser.add_argument("--resume", type=str, default=None)
     parser.add_argument("--devices", nargs=2, type=str)
+    parser.add_argument("--random", action="store_true")
 
     args = parser.parse_args()
 
@@ -280,6 +282,6 @@ if __name__ == "__main__":
         checkpoint=args.resume,
     )
 
-    trainer.run(args.n)
+    trainer.run(args.n, random_bot=args.random)
 
     subprocess.run(f"{ADB_PATH} kill-server")

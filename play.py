@@ -7,7 +7,8 @@ from argparse import ArgumentParser
 import torch
 
 import timing
-from device import Controller, ScreenDetector
+from device.controller import Controller
+from device.state.screens import ScreenDetector
 from utils import seed_all
 from bots.single_deck.bot import SingleDeckBot
 from constants import TOWER_HP_BOXES, ADB_PATH
@@ -48,7 +49,7 @@ def run_bot(
     queue.put(experience)
 
 
-def play_single_game(output, deck_names, devices, unit_model, side_model, number_model, eps, network):
+def play_single_game(output, deck_names, devices, unit_model, side_model, number_model, eps, network, random_bot):
     TEAMS = ["blue", "red"]
 
     num_bots = len(devices)
@@ -59,6 +60,7 @@ def play_single_game(output, deck_names, devices, unit_model, side_model, number
 
     # start processes
     out_queue = Queue()
+    processes = []
     processes = [Process(target=run_bot, args=(
         unit_model,
         side_model,
@@ -68,7 +70,7 @@ def play_single_game(output, deck_names, devices, unit_model, side_model, number
         devices[i],
         out_queue,
         output,
-        eps,
+        1.0 if random_bot and i%2==1 else eps,
         i%2==1,
         network,
     )) for i in range(num_bots)]
@@ -78,7 +80,10 @@ def play_single_game(output, deck_names, devices, unit_model, side_model, number
 
     # extract experience from each bot
     experiences = []
-    for _ in range(num_bots):
+    for i in range(num_bots):
+        if random_bot and i%2==1:
+            continue  # skip random experience
+
         experiences.extend(out_queue.get())
 
     for p in processes:
@@ -88,7 +93,7 @@ def play_single_game(output, deck_names, devices, unit_model, side_model, number
     return experiences
 
 
-def run(n_games, output, deck_names, devices, unit_model, side_model, number_model, eps, network):
+def run(n_games, output, deck_names, devices, unit_model, side_model, number_model, eps, network, random_bot):
     episodes = []
     for _ in range(n_games):
         episode = play_single_game(
@@ -99,7 +104,8 @@ def run(n_games, output, deck_names, devices, unit_model, side_model, number_mod
             side_model=side_model,
             eps=eps,
             devices=devices,
-            network=network
+            network=network,
+            random_bot=random_bot
         )
 
         if n_games == 1:
@@ -128,6 +134,7 @@ if __name__ == "__main__":
     parser.add_argument("--eps", type=float, default=0.0)
     parser.add_argument("--net", type=str, default=None)
     parser.add_argument("--n", type=int, default=1, help="number of games to play")
+    parser.add_argument("--random", action="store_true")
 
     args = parser.parse_args()
 
@@ -155,6 +162,7 @@ if __name__ == "__main__":
         side_model=args.side_model,
         eps=args.eps,
         network=weights,
+        random_bot=args.random
     )
 
     subprocess.run(f"{ADB_PATH} kill-server")
