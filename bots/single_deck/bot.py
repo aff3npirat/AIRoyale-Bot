@@ -4,9 +4,9 @@ import torch
 import numpy as np
 
 from bots.custom_bot import BotBase
-from state.units import UnitDetector
-from state.cards import BlueCardDetector
-from state.numbers import NumberDetector
+from device.state.units import UnitDetector
+from device.state.cards import BlueCardDetector
+from device.state.numbers import NumberDetector
 from bots.single_deck.nn import QNet
 from timing import exec_time, intervall
 from constants import TILES_X, TILES_Y
