@@ -22,7 +22,6 @@ def run_bot(
     team,
     device,
     queue,
-    output,
     eps,
     accept_invite=False,
     network=None,
@@ -45,7 +44,7 @@ def run_bot(
     queue.put(experience)
 
 
-def play_single_game(output, deck_names, devices, unit_model, side_model, number_model, eps, network, random_bot):
+def play_single_game(deck_names, devices, unit_model, side_model, number_model, eps, network, random_bot):
     TEAMS = ["blue", "red"]
 
     num_bots = len(devices)
@@ -65,7 +64,6 @@ def play_single_game(output, deck_names, devices, unit_model, side_model, number
         TEAMS[i],
         devices[i],
         out_queue,
-        output,
         1.0 if random_bot and i%2==1 else eps,
         i%2==1,
         network,
@@ -89,11 +87,10 @@ def play_single_game(output, deck_names, devices, unit_model, side_model, number
     return experiences
 
 
-def run(n_games, output, deck_names, devices, unit_model, side_model, number_model, eps, network, random_bot):
+def run(n_games, deck_names, devices, unit_model, side_model, number_model, eps, network, random_bot):
     episodes = []
     for _ in range(n_games):
         episode = play_single_game(
-            output=output,
             deck_names=deck_names,
             unit_model=unit_model,
             number_model=number_model,
@@ -122,7 +119,6 @@ def run(n_games, output, deck_names, devices, unit_model, side_model, number_mod
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("deck", type=str, nargs=8)
-    parser.add_argument("--out", type=str, required=True)
     parser.add_argument("--devices", type=str, nargs="+", default=[5555, 5575])
     parser.add_argument("--unit-model", type=str, default="./models/units_singledeck_cpu.onnx")
     parser.add_argument("--num-model", type=str, default="./models/number_cpu.onnx")
@@ -141,8 +137,6 @@ if __name__ == "__main__":
     subprocess.run(f"{ADB_PATH} start-server")
     for device in args.devices:
         subprocess.run(f"{ADB_PATH} connect {device}")
-
-    os.makedirs(args.out, exist_ok=True)
 
     weights = None
     if args.net is not None:
