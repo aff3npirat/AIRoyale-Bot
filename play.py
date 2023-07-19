@@ -40,13 +40,13 @@ def run_bot(
 
     victory = bot.run(eps if not random_bot else 1.0)
 
-    bot.controller.exit_game()
-
     if not random_bot:
         logging.info("Computing reward...")
         experience = bot.with_reward(bot.replay_buffer, victory)
         logging.info("Reward done!")
         queue.put(experience)
+
+    bot.controller.exit_game()
 
 
 def play_single_game(deck_names, devices, unit_model, side_model, number_model, eps, network, random_bot):
