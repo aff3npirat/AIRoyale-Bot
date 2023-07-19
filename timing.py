@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 _names = []
 _enabled = ("BENCHMARK" in os.environ) and (os.environ["BENCHMARK"]!="0")
 
+print(f"Timing: {_enabled}")
+
 
 def init_logging():
     log_dir = os.environ["BENCHMARK"]
