@@ -25,6 +25,7 @@ def run_bot(
     eps,
     accept_invite=False,
     network=None,
+    random_bot=False,
 ):
     seed_all(os.getpid())
 
@@ -36,12 +37,13 @@ def run_bot(
     if accept_invite:
         bot.controller.accept_invite()
 
-    victory = bot.run(eps)
+    victory = bot.run(eps if not random_bot else 1.0)
 
     bot.controller.exit_game()
 
-    experience = bot.with_reward(bot.replay_buffer, victory)
-    queue.put(experience)
+    if not random_bot:
+        experience = bot.with_reward(bot.replay_buffer, victory)
+        queue.put(experience)
 
 
 def play_single_game(deck_names, devices, unit_model, side_model, number_model, eps, network, random_bot):
@@ -64,9 +66,10 @@ def play_single_game(deck_names, devices, unit_model, side_model, number_model, 
         TEAMS[i],
         devices[i],
         out_queue,
-        1.0 if random_bot and i%2==1 else eps,
+        eps,
         i%2==1,
         network,
+        random_bot,
     )) for i in range(num_bots)]
 
     for p in processes:
