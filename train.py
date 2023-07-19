@@ -59,14 +59,14 @@ class Trainer:
             self.memory = hparams["memory"]
             self.time_elapsed = 0
         else:
-            cp = torch.load(checkpoint)
+            cp = torch.load(checkpoint, map_location="cpu")
 
             self.memory = cp["memory"]
 
             self.eps = cp["eps"]
             lr = cp["lr"]
 
-            main_net_state_dict = cp["main_net"]    
+            main_net_state_dict = cp["main_net"]
             target_net_state_dict = cp["target_net"]
 
             self.game_count = cp["game_counter"]
@@ -101,8 +101,8 @@ class Trainer:
         self.tic = time.time()
 
         cp = {
-            "main_net": self.main_net.cpu().state_dict(),
-            "target_net": self.target_net.cpu().state_dict(),
+            "main_net": self.main_net.state_dict(),
+            "target_net": self.target_net.state_dict(),
             "memory": self.memory,
             "eps": self.eps,
             "lr": self.optim.param_groups[0]["lr"],
@@ -191,6 +191,7 @@ class Trainer:
         self.tic = time.time()
 
         self.main_net = self.main_net.to(self.device)
+        self.target_net = self.target_net.to(self.device)
 
         for i in range(num_games):
             logging.info(f"Starting game {i+1}/{num_games}")
