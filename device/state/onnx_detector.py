@@ -58,7 +58,7 @@ class OnnxDetector:
 
             conf = x[:, 5:mi].max(1, keepdims=True)  # conf
             j = x[:, 5:mi].argmax(1, keepdims=True)  # class labels
-            x = np.concatenate((box, conf, j.astype(np.float)), 1)[conf.reshape(-1) > conf_thres]
+            x = np.concatenate((box, conf, j.astype(float)), 1)[conf.reshape(-1) > conf_thres]
 
 
             # Check shape
