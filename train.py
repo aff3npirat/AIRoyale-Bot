@@ -122,6 +122,9 @@ class Trainer:
 
     @exec_time
     def train(self, batch_size, num_batches, device, shuffle=True):
+        self.main_net = self.main_net.to(self.device)
+        self.target_net = self.target_net.to(self.device)
+
         for b in range(num_batches):
             batch, idxs, is_weights = self.memory.sample(batch_size, shuffle=shuffle)  # list of tuples ((board, context), action, reward, done)
 
@@ -189,9 +192,6 @@ class Trainer:
     
     def run(self, num_games, random_bot=False):
         self.tic = time.time()
-
-        self.main_net = self.main_net.to(self.device)
-        self.target_net = self.target_net.to(self.device)
 
         for i in range(num_games):
             logging.info(f"Starting game {i+1}/{num_games}")
