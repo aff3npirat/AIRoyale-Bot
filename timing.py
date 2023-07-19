@@ -9,20 +9,27 @@ import matplotlib.pyplot as plt
 
 
 
-_enabled = ("BENCHMARK" in os.environ) and (os.environ["BENCHMARK"]=="1")
-
-def init_logging(file):
-    if _enabled:
-        time_logger = logging.getLogger("time")
-        time_logger.setLevel(logging.INFO)
-        handler_file = logging.FileHandler(file, mode="w+")
-        time_logger.addHandler(handler_file)
-        time_logger.info("Initialized time logging")
-
-        global logger
-        logger = time_logger
-
 _names = []
+_enabled = ("BENCHMARK" in os.environ) and (os.environ["BENCHMARK"]!="0")
+
+
+def init_logging():
+    log_dir = os.environ["BENCHMARK"]
+    os.makedirs(log_dir, exist_ok=True)
+    file = os.path.join(log_dir, f"time_{os.getpid()}.log")
+    
+    time_logger = logging.getLogger("time")
+    time_logger.setLevel(logging.INFO)
+    handler_file = logging.FileHandler(file, mode="w+")
+    time_logger.addHandler(handler_file)
+    time_logger.info("Initialized time logging")
+
+    global logger
+    logger = time_logger
+
+
+if _enabled:
+    init_logging()
 
 
 def exec_time(func):

@@ -6,7 +6,6 @@ from argparse import ArgumentParser
 
 import torch
 
-import timing
 from device.controller import Controller
 from device.state.screens import ScreenDetector
 from utils import seed_all
@@ -28,10 +27,7 @@ def run_bot(
     accept_invite=False,
     network=None,
 ):
-    pid = os.getpid()
-    timing.init_logging(os.path.join(output, f"time_{pid}.log"))
-
-    seed_all(pid)
+    seed_all(os.getpid())
 
     bot = SingleDeckBot(team, unit_model, number_model, side_model, deck_names, king_levels={"ally": 11, "enemy": 11}, device=device)
 

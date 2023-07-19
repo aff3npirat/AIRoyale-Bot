@@ -11,7 +11,7 @@ import torch
 import play
 from bots.single_deck.nn import QNet
 from bots.single_deck.bot import NEXT_CARD_END, SingleDeckBot
-from timing import exec_time, init_logging
+from timing import exec_time
 from config import build_options, build_params
 from constants import ADB_PATH
 
@@ -268,8 +268,6 @@ if __name__ == "__main__":
         shutil.copy(args.opt, os.path.join(out_dir, "options.yaml"))
     if os.path.abspath(os.path.join(args.params, "..")) != os.path.abspath(out_dir):
         shutil.copy(args.params, os.path.join(out_dir, "hparams.yaml"))
-
-    init_logging(os.path.join(out_dir, "timing.log"))
 
     subprocess.run(f"{ADB_PATH} start-server")
     for device in args.devices:
