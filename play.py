@@ -144,7 +144,6 @@ if __name__ == "__main__":
 
     run(
         n_games=args.n,
-        output=args.out,
         devices=args.devices,
         deck_names=args.deck,
         unit_model=args.unit_model,
