@@ -1,6 +1,7 @@
 # Play a bot vs. bot match.
 import os
 import subprocess
+import logging
 from multiprocessing import Process, Queue
 from argparse import ArgumentParser
 
@@ -42,7 +43,9 @@ def run_bot(
     bot.controller.exit_game()
 
     if not random_bot:
+        logging.info("Computing reward...")
         experience = bot.with_reward(bot.replay_buffer, victory)
+        logging.info("Reward done!")
         queue.put(experience)
 
 
