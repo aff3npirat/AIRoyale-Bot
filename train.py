@@ -222,10 +222,12 @@ class Trainer:
             logging.info(f"Training on {N} new experiences")
 
             num_batches = N//self.batch_size
+            logging.info(f"Training on {num_batches*self.batch_size} samples...")
             self.train(batch_size=self.batch_size, num_batches=num_batches, device=self.device)  # train on new experience
 
             partial_batch = N%self.batch_size
             if partial_batch > 0:
+                logging.info(f"Training on {partial_batch} samples...")
                 self.train(batch_size=partial_batch, num_batches=1, device=self.device)  # train on new experience
 
             if self.memory.is_full():
