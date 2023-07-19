@@ -1,4 +1,5 @@
-from device import Controller, ScreenDetector
+from device.controller import Controller
+from device.state.screens import ScreenDetector
 from constants import CARD_HEIGHT, CARD_WIDTH, CARD_CONFIG
 
 
