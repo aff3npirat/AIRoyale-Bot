@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from state.onnx_detector import OnnxDetector
+from device.state.onnx_detector import OnnxDetector
 from timing import exec_time
 from constants import (
     SIDE_H,

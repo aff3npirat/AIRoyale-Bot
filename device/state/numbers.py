@@ -2,7 +2,7 @@ import numpy as np
 from PIL import Image
 
 from constants import NUMBER_WIDTH, NUMBER_HEIGHT, TOWER_HP_BOXES, KING_HP, PRINCESS_HP, ELIXIR_RED_THR, ELIXIR_DELTA_X, ELIXIR_X, ELIXIR_Y, TIME_BOX
-from state.onnx_detector import OnnxDetector
+from device.state.onnx_detector import OnnxDetector
 from timing import exec_time
 
 
