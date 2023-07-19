@@ -72,7 +72,7 @@ def play_single_game(deck_names, devices, unit_model, side_model, number_model, 
         eps,
         i%2==1,
         network,
-        random_bot,
+        random_bot and i%2==1,
     )) for i in range(num_bots)]
 
     for p in processes:
