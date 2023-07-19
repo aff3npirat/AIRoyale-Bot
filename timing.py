@@ -17,6 +17,7 @@ def init_logging():
     log_dir = os.environ["BENCHMARK"]
     os.makedirs(log_dir, exist_ok=True)
     file = os.path.join(log_dir, f"time_{os.getpid()}.log")
+    print(f"Timing file: {file}")
     
     time_logger = logging.getLogger("time")
     time_logger.setLevel(logging.INFO)
