@@ -197,7 +197,6 @@ class Trainer:
 
             episodes = play.run(
                 n_games=1,
-                output=self.output,
                 deck_names=self.deck_names,
                 devices=self.devices,
                 unit_model=self.unit_model,
