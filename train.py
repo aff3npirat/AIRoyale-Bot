@@ -167,7 +167,7 @@ class Trainer:
 
                 action_n_step = torch.argmax(action_n_step, dim=1)
                 q_n_step = self.target_net((n_step_board[i], n_step_context[i]))[action_n_step]
-                discounted_rewards += (1-dones)*q_n_step*torch.pow(self.discount, actual_n)
+                discounted_rewards += (1-dones.to(self.device))*q_n_step*torch.pow(self.discount, actual_n).to(self.device)
 
             predicted_q = self.main_net((board, context))
             target_q = predicted_q.detach().clone()
