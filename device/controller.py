@@ -61,7 +61,8 @@ class Controller:
         subprocess.run(f"{ADB_PATH} -s {self.device} shell input tap {x} {y}")
         time.sleep(1)
         for _ in range(5):
-            subprocess.run(f"{ADB_PATH} -s {self.device} shell input swipe 150 550 150 150 200")
+            subprocess.run(f"{ADB_PATH} -s {self.device} shell input swipe 150 550 150 150 300")
+            time.sleep(0.5)
         time.sleep(1)
 
         self.click(*CLAN_1V1)
