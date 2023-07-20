@@ -195,7 +195,9 @@ class Trainer:
                 param_target = self.target_net.named_parameters()
                 for n in param_main:
                     mean_diff = torch.mean(torch.abs(param_main[n] - param_target[n]))
-                    logging.info(f"[{n}] mean-diff: {mean_diff:.3g}")
+                    mean_grad = torch.mean(param_main[n].grad)
+                    std_grad = torch.std(param_main[n].grad)
+                    logging.info(f"[{n}] mean-diff: {mean_diff.item():.3g} | grad: {mean_grad.item():.3g}+-{std_grad.item():.3g}")
         
             if self.update_count%self.delta == 0:
                 self.update_target_net()
