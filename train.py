@@ -191,8 +191,8 @@ class Trainer:
 
             # log mean difference between main and target net, should always be greater 0 otherwise no learning is done
             with torch.no_grad():
-                param_main = self.main_net.named_parameters()
-                param_target = self.target_net.named_parameters()
+                param_main = dict(self.main_net.named_parameters())
+                param_target = dict(self.target_net.named_parameters())
                 for n in param_main:
                     mean_diff = torch.mean(torch.abs(param_main[n] - param_target[n]))
                     mean_grad = torch.mean(param_main[n].grad)
