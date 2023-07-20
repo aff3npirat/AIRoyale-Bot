@@ -138,7 +138,7 @@ class Trainer:
             n_step_context = torch.zeros((batch_size, *batch[0][0][1].shape))
             dones = torch.empty(batch_size)
             discounted_rewards = torch.empty(batch_size)
-            actual_n = torch.empty(batch_size)
+            actual_n = torch.zeros(batch_size)
             for i in range(batch_size):
                 discounted_reward, last_idx = n_step_return(self.n, self.memory, idxs[i], self.discount)
                 discounted_rewards[i] = discounted_reward
@@ -151,6 +151,7 @@ class Trainer:
                     n_step_board[i] = state_n_step[0]
                     n_step_context[i] = state_n_step[1]
                     dones[i] = 0.0
+                    actual_n[i] = self.n
                     
             logging.info(f"Calculating TD-errors for batch {b}/{num_batches}")
 
@@ -188,6 +189,14 @@ class Trainer:
             self.update_count += 1
             self.sample_count += len(batch)
 
+            # log mean difference between main and target net, should always be greater 0 otherwise no learning is done
+            with torch.no_grad():
+                param_main = self.main_net.named_parameters()
+                param_target = self.target_net.named_parameters()
+                for n in param_main:
+                    mean_diff = torch.mean(torch.abs(param_main[n] - param_target[n]))
+                    logging.info(f"[{n}] mean-diff: {mean_diff:.3g}")
+        
             if self.update_count%self.delta == 0:
                 self.update_target_net()
     
