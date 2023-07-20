@@ -175,7 +175,7 @@ class Trainer:
             target_q[list(range(batch_size)), action] = discounted_rewards
 
             abs_errors = torch.sum(torch.abs(target_q - predicted_q), dim=1)
-            logging.info(f"TD errors: {abs_errors.mean().item():.4f}+-{abs_errors.var().item():.4f} | min={abs_errors.min().item():.2g}, max={abs_errors.max():.2g}")
+            logging.info(f"TD errors: {abs_errors.mean().item():.4f}+-{abs_errors.std().item():.4f} | min={abs_errors.min().item():.2g}, max={abs_errors.max():.2g}")
 
             loss = torch.mean((abs_errors**2) * is_weights.to(device))
             logging.info(f"Loss {loss:.4f}, performing backward")
