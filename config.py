@@ -35,6 +35,7 @@ def build_params(params_dict=None, params_file=None):
         "weight_decay","batch_size",
         "unit_model", "side_model", "number_model",
         "deck_names",
+        "activation",
     ]
     for key in to_copy:
         new_dict[key] = params_dict[key]

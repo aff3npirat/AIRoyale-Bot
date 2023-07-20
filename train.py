@@ -76,7 +76,7 @@ class Trainer:
 
             logging.info(f"Loaded checkpoint '{checkpoint}'")
 
-        self.main_net = QNet([512+NEXT_CARD_END, 128, 64, 5], activation="sigmoid", bias=True, feature_extractor=False)
+        self.main_net = QNet([512+NEXT_CARD_END, 128, 64, 5], activation=params["activation"], bias=True, feature_extractor=False)
         if checkpoint is not None:
             self.main_net.load_state_dict(main_net_state_dict)
         self.main_net.train()
